@@ -82,8 +82,8 @@ function goHome() { router.push('/') }
   display: flex; align-items: center; gap: 8px;
   transition: all .15s;
 }
-.menu-item:hover { background: #f1f5f9; color: var(--text); }
-.menu-item.active { background: #ccfbf1; color: var(--primary-dark); font-weight: 600; }
+.menu-item:hover { background: var(--code-bg); color: var(--text); }
+.menu-item.active { background: var(--accent-soft); color: var(--primary-dark); font-weight: 600; }
 .mi-icon { font-size: 15px; }
 
 .content { flex: 1; min-width: 0; }

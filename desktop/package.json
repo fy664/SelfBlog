@@ -1,0 +1,42 @@
+{
+  "name": "selfblog-desktop",
+  "version": "1.0.0",
+  "description": "SelfBlog 个人博客系统 · 桌面版（Electron 壳）",
+  "main": "main.js",
+  "author": "SelfBlog",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.selfblog.desktop",
+    "productName": "SelfBlog",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "package.json",
+      "../web/dist/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "SelfBlog"
+    }
+  }
+}

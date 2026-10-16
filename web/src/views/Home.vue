@@ -107,7 +107,7 @@ watch(() => route.query.tag, (t) => {
 
 <style scoped>
 .hero {
-  background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+  background: linear-gradient(135deg, var(--hero-from) 0%, var(--hero-to) 100%);
   border-radius: 16px;
   padding: 40px 32px;
   color: #fff;

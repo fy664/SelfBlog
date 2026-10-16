@@ -9,7 +9,9 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
 const http = axios.create({
-  baseURL: '/api',        // 开发环境由 vite proxy 转发到 127.0.0.1:8080
+  // 开发环境走相对路径 /api（vite proxy 转发到后端）
+  // 生产构建（Electron / 部署）通过 VITE_API_BASE 注入后端绝对地址
+  baseURL: import.meta.env.VITE_API_BASE || '/api',
   timeout: 10000
 })
 

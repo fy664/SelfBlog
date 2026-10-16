@@ -6,11 +6,19 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from './store/user'
+import { useThemeStore, THEMES } from './store/theme'
 
 const router = useRouter()
 const store = useUserStore()
+const themeStore = useThemeStore()
 
 const isLoggedIn = computed(() => store.isLoggedIn)
+const themes = THEMES
+
+// 切换主题（theme.js 负责应用 + 持久化）
+function switchTheme(key) {
+  themeStore.setTheme(key)
+}
 
 // 登出：清状态并回首页
 function handleLogout() {
@@ -40,6 +48,18 @@ function goLogin() {
         </nav>
 
         <div class="nav-user">
+          <!-- 主题切换：三色块圆点（晨光/纸感/暗夜） -->
+          <div class="theme-switch" title="切换主题">
+            <span
+              v-for="t in themes"
+              :key="t.key"
+              class="theme-dot"
+              :class="{ active: themeStore.theme === t.key }"
+              :style="{ background: t.dot }"
+              @click="switchTheme(t.key)"
+            />
+          </div>
+
           <template v-if="isLoggedIn">
             <el-dropdown>
               <span class="user-chip">
@@ -80,7 +100,7 @@ function goLogin() {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, .9);
+  background: var(--nav-bg);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
 }
@@ -97,10 +117,22 @@ function goLogin() {
   padding: 6px 12px; border-radius: 8px; font-size: 15px; color: var(--text-2);
   transition: all .15s;
 }
-.nav-link:hover { color: var(--text); background: #f1f5f9; }
+.nav-link:hover { color: var(--text); background: var(--code-bg); }
 .nav-link.router-link-active { color: var(--primary); font-weight: 600; }
-.nav-user { display: flex; align-items: center; gap: 8px; }
+.nav-user { display: flex; align-items: center; gap: 10px; }
 .user-chip { cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+
+/* 主题切换色块 */
+.theme-switch { display: flex; gap: 6px; align-items: center; }
+.theme-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  opacity: .55;
+  transition: all .15s;
+}
+.theme-dot:hover { opacity: 1; transform: scale(1.15); }
+.theme-dot.active { opacity: 1; border-color: var(--text-2); transform: scale(1.15); }
 
 .main-area { min-height: calc(100vh - 140px); padding-top: 28px; padding-bottom: 40px; }
 

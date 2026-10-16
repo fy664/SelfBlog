@@ -1,0 +1,104 @@
+/* =============================================================
+ * 多主题系统（三套 UI）：
+ *   [data-theme="dawn"]  晨光：亮色卡片风（默认，青绿主色）
+ *   [data-theme="paper"] 纸感：米白极简 + 衬线标题（参考 PaperMod）
+ *   [data-theme="night"] 暗夜：深底柔和文字（参考 Nightfall）
+ *
+ * 通过覆盖 :root 下的 CSS 变量实现换肤；组件样式统一引用变量。
+ * Element Plus 组件主色（--el-color-*）也在此联动。
+ * ============================================================= */
+
+/* ---------- 晨光（默认值已在 main.css :root 定义，此处仅兜底） ---------- */
+[data-theme="dawn"] {
+  --primary: #0f766e;
+  --primary-dark: #115e59;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #1f2937;
+  --text-2: #6b7280;
+  --border: #e5e7eb;
+  --nav-bg: rgba(255, 255, 255, .9);
+  --code-bg: #f1f5f9;
+  --code-block-bg: #0f172a;
+  --quote-bg: #f0fdfa;
+  --accent-soft: #ccfbf1;
+  --hero-from: #0f766e;
+  --hero-to: #134e4a;
+
+  /* Element Plus 主色联动 */
+  --el-color-primary: #0f766e;
+  --el-color-primary-dark-2: #115e59;
+  --el-color-primary-light-3: #3f938b;
+  --el-color-primary-light-5: #6fb2ac;
+  --el-color-primary-light-7: #9fd1cd;
+  --el-color-primary-light-8: #b7e0dd;
+  --el-color-primary-light-9: #d7f0ee;
+}
+
+/* ---------- 纸感：极简、米白、衬线标题 ---------- */
+[data-theme="paper"] {
+  --primary: #57534e;           /* 暖灰棕，克制 */
+  --primary-dark: #44403c;
+  --bg: #faf9f7;                /* 米白纸感 */
+  --card: #ffffff;
+  --text: #292524;
+  --text-2: #78716c;
+  --border: #e7e5e4;
+  --nav-bg: rgba(250, 249, 247, .92);
+  --code-bg: #f5f5f4;
+  --code-block-bg: #292524;
+  --quote-bg: #f5f5f4;
+  --accent-soft: #e7e5e4;
+  --hero-from: #57534e;
+  --hero-to: #292524;
+
+  --el-color-primary: #57534e;
+  --el-color-primary-dark-2: #44403c;
+  --el-color-primary-light-3: #7d7871;
+  --el-color-primary-light-5: #a39e97;
+  --el-color-primary-light-7: #c8c4be;
+  --el-color-primary-light-8: #dad6d0;
+  --el-color-primary-light-9: #eeebe7;
+
+  /* 标题字体切衬线（纸感特色） */
+  --font-display: "Noto Serif SC", "Songti SC", "SimSun", Georgia, serif;
+}
+[data-theme="paper"] .brand-name,
+[data-theme="paper"] .hero-title,
+[data-theme="paper"] .page-title,
+[data-theme="paper"] .article-card .title,
+[data-theme="paper"] .title {
+  font-family: var(--font-display);
+}
+
+/* ---------- 暗夜：深底 + 柔和文字 ---------- */
+[data-theme="night"] {
+  --primary: #2dd4bf;           /* 亮青，深底可读 */
+  --primary-dark: #5eead4;
+  --bg: #0b1220;
+  --card: #111a2e;
+  --text: #e2e8f0;
+  --text-2: #94a3b8;
+  --border: #1e293b;
+  --nav-bg: rgba(11, 18, 32, .92);
+  --code-bg: #1e293b;
+  --code-block-bg: #020617;
+  --quote-bg: #0f172a;
+  --accent-soft: #164e46;
+  --hero-from: #0f766e;
+  --hero-to: #022c22;
+
+  --el-color-primary: #2dd4bf;
+  --el-color-primary-dark-2: #5eead4;
+  --el-color-primary-light-3: #46d9c8;
+  --el-color-primary-light-5: #66e1d3;
+  --el-color-primary-light-7: #8ae9df;
+  --el-color-primary-light-8: #9dede5;
+  --el-color-primary-light-9: #1d3a44;
+
+  /* Element Plus 深色组件变量由 html.dark + dark/css-vars.css 提供 */
+  --el-bg-color: #111a2e;
+  --el-bg-color-overlay: #1e293b;
+  --el-border-color: #334155;
+  --el-text-color-primary: #e2e8f0;
+}

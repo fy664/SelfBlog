@@ -46,17 +46,22 @@
 │       ├── handlers.h/.cpp     # HTTP 路由与业务逻辑
 │       ├── util/               # SHA-256 / Base64 / JWT / 时间与密码
 │       └── store/              # Repository 抽象 + JsonStore + MySqlStore
-└── web/                        # 前端（Vue3 + Vite + Element Plus）
-    ├── package.json
-    ├── vite.config.js          # /api 代理到 127.0.0.1:8080
-    └── src/
-        ├── main.js / App.vue   # 入口与整体布局（顶部导航）
-        ├── router/             # 路由（前台 + /admin 登录守卫）
-        ├── api/                # axios 封装 + 全部接口函数
-        ├── store/              # Pinia 用户状态（token 持久化）
-        ├── utils/md.js         # Markdown 渲染（marked + hljs + DOMPurify）
-        ├── components/         # ArticleCard / MarkdownView
-        └── views/              # 首页 / 详情 / 标签 / 登录注册 / 后台管理
+├── web/                        # 前端（Vue3 + Vite + Element Plus）
+│   ├── package.json
+│   ├── vite.config.js          # base=./ 兼容 file://；/api 代理到 8080
+│   ├── .env.production         # 生产 API 地址（Electron/部署用）
+│   └── src/
+│       ├── main.js / App.vue   # 入口与整体布局（顶部导航 + 主题切换）
+│       ├── router/             # 路由（前台 + /admin 登录守卫）
+│       ├── api/                # axios 封装 + 全部接口函数
+│       ├── store/              # Pinia 用户状态 + 主题状态（theme.js）
+│       ├── utils/md.js         # Markdown 渲染（marked + hljs + DOMPurify）
+│       ├── styles/themes.css   # 三套 UI：晨光/纸感/暗夜（CSS 变量换肤）
+│       ├── components/         # ArticleCard / MarkdownView
+│       └── views/              # 首页 / 详情 / 标签 / 登录注册 / 后台管理
+└── desktop/                    # Electron 桌面壳（加载 web/dist）
+    ├── main.js                 # BrowserWindow 加载生产构建
+    └── package.json            # electron + electron-builder（npm run dist 打 exe）
 ```
 
 ## 四、本地快速开始（Windows）
@@ -140,13 +145,33 @@ npm run dev        :: http://127.0.0.1:5173 （/api 自动代理到后端 8080�
 - `/login` 登录（管理员：admin / ***REDACTED***，见 server/config.json）
 - `/admin` 后台管理：文章 CRUD（含草稿）、评论查看、数据看板
 
+**三套 UI（多主题）**：导航栏右侧三个色块圆点切换 ——
+- 晨光（默认）：卡片化亮色，青绿主色
+- 纸感：米白极简 + 衬线标题（参考 hugo-PaperMod）
+- 暗夜：深色界面 + Element Plus 暗色组件（参考 Nightfall）
+
+选择自动持久化到 localStorage；主题系统见 `web/src/store/theme.js` + `web/src/styles/themes.css`。
+
 演示数据（可选）：
 
 ```bat
 python seed_demo.py     :: 用 admin 登录后端并发布一篇示例文章
 ```
 
-生产构建：`npm run build`，产物在 `web/dist`。
+生产构建：`npm run build`（base=./，兼容 file:// 与 Electron），产物在 `web/dist`。
+
+## 六·5、桌面端（Electron 本地应用）
+
+```bat
+cd desktop
+npm install        :: 首次（国内镜像：ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/）
+npm start          :: 以开发方式启动桌面应用（加载 web/dist）
+npm run dist       :: 打包 Windows 安装程序（NSIS，输出 desktop/release/SelfBlog Setup *.exe）
+```
+
+桌面端复用同一套前端（含三套主题），API 指向本机后端
+（`web/.env.production` 中 VITE_API_BASE=http://127.0.0.1:8080/api）。
+前提：后端 blog_server 与 MySQL 已按上文启动。
 
 ## 七、API 一览
 
