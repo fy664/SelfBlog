@@ -5,6 +5,7 @@
 #include <mysql.h>
 
 #include <cstdio>
+#include <cstring>
 #include <memory>
 
 namespace blog {
@@ -225,7 +226,9 @@ int64_t MySqlStore::create_article(const Article& a, std::string& err) {
   }
   MYSQL_STMT* stmt = mysql_stmt_init(lease.get());
   if (!stmt) { err = "数据库错误"; return 0; }
-  mysql_stmt_prepare(stmt, "SELECT LAST_INSERT_ID()", 21);
+  // 注意：长度参数必须与 SQL 实际长度一致（"SELECT LAST_INSERT_ID()" 为 23 字节）
+  mysql_stmt_prepare(stmt, "SELECT LAST_INSERT_ID()",
+                     (unsigned long)std::strlen("SELECT LAST_INSERT_ID()"));
   mysql_stmt_execute(stmt);
   std::vector<MYSQL_BIND> rb(1);
   std::memset(rb.data(), 0, sizeof(MYSQL_BIND));
