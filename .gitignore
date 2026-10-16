@@ -9,6 +9,10 @@ build/
 server/data/
 data/
 
+# ---- 前端依赖与构建产物 ----
+web/node_modules/
+web/dist/
+
 # ---- 项目书自检截图（非代码产物）----
 _shots/
 
