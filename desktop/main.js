@@ -20,8 +20,12 @@ function createWindow() {
     }
   })
 
-  // 加载生产构建产物（与 web/dist 保持同步）
-  const entry = path.join(__dirname, '..', 'web', 'dist', 'index.html')
+  // 加载生产构建产物
+  // 开发时：__dirname=desktop → 加载 ../web/dist/index.html
+  // 打包后：__dirname=app.asar → 加载 renderer/index.html（构建前已复制）
+  const entry = app.isPackaged
+    ? path.join(__dirname, 'renderer', 'index.html')
+    : path.join(__dirname, '..', 'web', 'dist', 'index.html')
   console.log('[selfblog] entry:', entry)
   win.loadFile(entry).then(
     () => console.log('[selfblog] loadFile ok'),

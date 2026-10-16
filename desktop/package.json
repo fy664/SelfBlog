@@ -7,6 +7,8 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
+    "sync:web": "robocopy ..\\web\\dist renderer /E /NFL /NDL /NJH /NJS /NP & exit 0",
+    "predist": "npm run sync:web",
     "dist": "electron-builder --win nsis"
   },
   "devDependencies": {
@@ -22,7 +24,7 @@
     "files": [
       "main.js",
       "package.json",
-      "../web/dist/**/*"
+      "renderer/**/*"
     ],
     "win": {
       "target": [
