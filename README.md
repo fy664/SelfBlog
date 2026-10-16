@@ -145,12 +145,18 @@ npm run dev        :: http://127.0.0.1:5173 （/api 自动代理到后端 8080�
 - `/login` 登录（管理员：admin / ***REDACTED***，见 server/config.json）
 - `/admin` 后台管理：文章 CRUD（含草稿）、评论查看、数据看板
 
-**三套 UI（多主题）**：导航栏右侧三个色块圆点切换 ——
-- 晨光（默认）：卡片化亮色，青绿主色
-- 纸感：米白极简 + 衬线标题（参考 hugo-PaperMod）
-- 暗夜：深色界面 + Element Plus 暗色组件（参考 Nightfall）
+**六套 UI（多主题）**：导航栏「主题」下拉一键切换，选择自动持久化 ——
+| 主题 | 风格 | 参考开源作品 |
+| --- | --- | --- |
+| 晨光（默认） | 卡片化亮色，青绿主色 | hexo-theme-butterfly |
+| 纸感 | 米白极简 + 衬线标题 | hugo-PaperMod |
+| 暗夜 | 深色柔和文字 + Element 暗色组件 | Nightfall |
+| 终端 | 等宽字体 + 荧光绿 + 直角 | M-Terminal / Hacker Blog |
+| 杂志 | 报纸米黄 + 衬线大标题 + 深红点缀 | Hipaper |
+| 星空 | 深蓝紫 + 玻璃拟态卡片 | Astro Starread / Fuwari |
 
-选择自动持久化到 localStorage；主题系统见 `web/src/store/theme.js` + `web/src/styles/themes.css`。
+主题系统见 `web/src/store/theme.js` + `web/src/styles/themes.css`（CSS 变量换肤，
+Element Plus 主色联动）。响应式已覆盖移动/平板/桌面断点。
 
 演示数据（可选）：
 

@@ -1,8 +1,11 @@
 /* =============================================================
- * 多主题系统（三套 UI）：
- *   [data-theme="dawn"]  晨光：亮色卡片风（默认，青绿主色）
- *   [data-theme="paper"] 纸感：米白极简 + 衬线标题（参考 PaperMod）
- *   [data-theme="night"] 暗夜：深底柔和文字（参考 Nightfall）
+ * 多主题系统（六套 UI）：
+ *   [data-theme="dawn"]      晨光：亮色卡片风（默认，青绿主色）
+ *   [data-theme="paper"]     纸感：米白极简 + 衬线标题（PaperMod）
+ *   [data-theme="night"]     暗夜：深底柔和文字（Nightfall）
+ *   [data-theme="terminal"]  终端：等宽字体 + 荧光绿（M-Terminal）
+ *   [data-theme="magazine"]  杂志：报纸米黄 + 衬线大标题（Hipaper）
+ *   [data-theme="starread"]  星空：深蓝紫 + 玻璃拟态（Astro Starread）
  *
  * 通过覆盖 :root 下的 CSS 变量实现换肤；组件样式统一引用变量。
  * Element Plus 组件主色（--el-color-*）也在此联动。
@@ -101,4 +104,122 @@
   --el-bg-color-overlay: #1e293b;
   --el-border-color: #334155;
   --el-text-color-primary: #e2e8f0;
+}
+
+/* ---------- 终端：等宽字体 + 荧光绿 + 直角 ---------- */
+[data-theme="terminal"] {
+  --primary: #7cfc00;           /* 荧光绿 */
+  --primary-dark: #b6ff5c;
+  --bg: #0c0f0a;
+  --card: #13170f;
+  --text: #e6f0d8;
+  --text-2: #8aa07a;
+  --border: #2a3322;
+  --nav-bg: rgba(12, 15, 10, .92);
+  --code-bg: #1a2014;
+  --code-block-bg: #05070a;
+  --quote-bg: #13170f;
+  --accent-soft: #1c2a10;
+  --hero-from: #1a2e0e;
+  --hero-to: #05070a;
+  --radius: 0px;                /* 直角 = 终端质感 */
+  --font-display: "JetBrains Mono", Consolas, "Courier New", monospace;
+
+  --el-color-primary: #7cfc00;
+  --el-color-primary-dark-2: #b6ff5c;
+  --el-color-primary-light-3: #93fd33;
+  --el-color-primary-light-5: #a8fd66;
+  --el-color-primary-light-7: #c0fe9a;
+  --el-color-primary-light-8: #cbfeb0;
+  --el-color-primary-light-9: #1a220f;
+
+  --el-bg-color: #13170f;
+  --el-bg-color-overlay: #1a2014;
+  --el-border-color: #2a3322;
+  --el-text-color-primary: #e6f0d8;
+}
+[data-theme="terminal"] .brand-name,
+[data-theme="terminal"] .hero-title,
+[data-theme="terminal"] .page-title,
+[data-theme="terminal"] .article-card .title,
+[data-theme="terminal"] .title {
+  font-family: var(--font-display);
+  letter-spacing: .02em;
+}
+
+/* ---------- 杂志：报纸米黄 + 衬线大标题 + 深红点缀 ---------- */
+[data-theme="magazine"] {
+  --primary: #b3261e;           /* 报头深红 */
+  --primary-dark: #8f1d16;
+  --bg: #f4efe4;                /* 报纸米黄 */
+  --card: #fbf8f0;
+  --text: #1c1917;
+  --text-2: #6b6357;
+  --border: #d9cfbc;
+  --nav-bg: rgba(244, 239, 228, .92);
+  --code-bg: #ece5d4;
+  --code-block-bg: #1c1917;
+  --quote-bg: #ece5d4;
+  --accent-soft: #eadfd0;
+  --hero-from: #1c1917;
+  --hero-to: #b3261e;
+  --radius: 2px;
+  --font-display: "Noto Serif SC", "Songti SC", "STZhongsong", Georgia, serif;
+
+  --el-color-primary: #b3261e;
+  --el-color-primary-dark-2: #8f1d16;
+  --el-color-primary-light-3: #c2523c;
+  --el-color-primary-light-5: #d28778;
+  --el-color-primary-light-7: #e3bbb4;
+  --el-color-primary-light-8: #ebcec9;
+  --el-color-primary-light-9: #f5e4e1;
+}
+[data-theme="magazine"] .brand-name,
+[data-theme="magazine"] .hero-title,
+[data-theme="magazine"] .page-title,
+[data-theme="magazine"] .article-card .title,
+[data-theme="magazine"] .title {
+  font-family: var(--font-display);
+  font-weight: 900;
+}
+[data-theme="magazine"] .hero {
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, .12);
+}
+
+/* ---------- 星空：深蓝紫 + 玻璃拟态 ---------- */
+[data-theme="starread"] {
+  --primary: #a78bfa;           /* 紫罗兰 */
+  --primary-dark: #c4b5fd;
+  --bg: #0d1120;
+  --card: #171d30;
+  --text: #e9ecf6;
+  --text-2: #9aa3c0;
+  --border: #232b44;
+  --nav-bg: rgba(13, 17, 32, .9);
+  --code-bg: #1e2538;
+  --code-block-bg: #0a0d18;
+  --quote-bg: #151a2b;
+  --accent-soft: #241f45;
+  --hero-from: #312e81;
+  --hero-to: #1e1b4b;
+  --radius: 16px;
+  --font-display: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+
+  --el-color-primary: #a78bfa;
+  --el-color-primary-dark-2: #c4b5fd;
+  --el-color-primary-light-3: #b39cfb;
+  --el-color-primary-light-5: #c0adfc;
+  --el-color-primary-light-7: #cfc0fd;
+  --el-color-primary-light-8: #d6c9fd;
+  --el-color-primary-light-9: #211e45;
+
+  --el-bg-color: #171d30;
+  --el-bg-color-overlay: #232b44;
+  --el-border-color: #33406a;
+  --el-text-color-primary: #e9ecf6;
+}
+[data-theme="starread"] .article-card,
+[data-theme="starread"] .auth-card {
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(49, 46, 129, .25);
 }
