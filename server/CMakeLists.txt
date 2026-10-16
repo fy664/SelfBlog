@@ -49,6 +49,14 @@ if(WIN32)
     add_custom_command(TARGET blog_server POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
               "${MYSQL_BIN_DIR}/libmysql.dll" "$<TARGET_FILE_DIR:blog_server>/libmysql.dll")
+    # libmysql.dll 还依赖 OpenSSL（libssl/libcrypto），一并拷贝
+    foreach(_dep libssl-3-x64.dll libcrypto-3-x64.dll zlib.dll)
+      if(EXISTS "${MYSQL_BIN_DIR}/${_dep}")
+        add_custom_command(TARGET blog_server POST_BUILD
+          COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                  "${MYSQL_BIN_DIR}/${_dep}" "$<TARGET_FILE_DIR:blog_server>/${_dep}")
+      endif()
+    endforeach()
   else()
     message(STATUS "未找到 MySQL 开发库，仅编译 JsonStore（本地开发模式）")
   endif()

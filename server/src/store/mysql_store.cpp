@@ -25,11 +25,11 @@ bool exec_stmt(MYSQL* c, const std::string& sql,
   }
   std::vector<MYSQL_BIND> binds;
   std::vector<unsigned long> lens;
-  std::vector<bool> nulls;
+  std::unique_ptr<bool[]> nulls;
   if (!params.empty()) {
     binds.resize(params.size());
     lens.resize(params.size());
-    nulls.resize(params.size(), false);
+    nulls.reset(new bool[params.size()]());
     std::memset(binds.data(), 0, binds.size() * sizeof(MYSQL_BIND));
     for (size_t i = 0; i < params.size(); ++i) {
       lens[i] = (unsigned long)params[i].size();
@@ -65,11 +65,11 @@ bool query_rows(MYSQL* c, const std::string& sql,
   }
   std::vector<MYSQL_BIND> binds;
   std::vector<unsigned long> lens;
-  std::vector<bool> nulls;
+  std::unique_ptr<bool[]> nulls;
   if (!params.empty()) {
     binds.resize(params.size());
     lens.resize(params.size());
-    nulls.resize(params.size(), false);
+    nulls.reset(new bool[params.size()]());
     std::memset(binds.data(), 0, binds.size() * sizeof(MYSQL_BIND));
     for (size_t i = 0; i < params.size(); ++i) {
       lens[i] = (unsigned long)params[i].size();
@@ -100,8 +100,8 @@ bool query_rows(MYSQL* c, const std::string& sql,
   std::vector<MYSQL_BIND> rbinds(ncol);
   std::vector<std::string> cells(ncol);
   std::vector<unsigned long> rlens(ncol, 0);
-  std::vector<bool> rnull(ncol, false);
-  std::vector<bool> rerr(ncol, false);
+  std::unique_ptr<bool[]> rnull(new bool[ncol]());
+  std::unique_ptr<bool[]> rerr(new bool[ncol]());
   std::memset(rbinds.data(), 0, rbinds.size() * sizeof(MYSQL_BIND));
   for (unsigned int i = 0; i < ncol; ++i) {
     cells[i].resize(1024, '\0');  // 预留 1KB；超长列会截断（业务字段足够）

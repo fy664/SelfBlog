@@ -32,19 +32,15 @@ class MySqlPool {
   explicit MySqlPool(const Config& cfg);
   ~MySqlPool();
 
-  // 阻塞获取一条连接；失败返回 nullptr
-  MYSQL* acquire();
-
-  // 归还连接（内部探活，失效则重建）
-  void release(MYSQL* c);
-
   // RAII 连接租约：析构时自动归还
   class Lease {
    public:
+    Lease() : pool_(nullptr), conn_(nullptr) {}
     Lease(MySqlPool* pool, MYSQL* conn) : pool_(pool), conn_(conn) {}
     ~Lease() { if (pool_ && conn_) pool_->release(conn_); }
     Lease(const Lease&) = delete;
     Lease& operator=(const Lease&) = delete;
+    explicit operator bool() const { return conn_ != nullptr; }
     MYSQL* get() const { return conn_; }
     MYSQL* operator->() const { return conn_; }
 
@@ -52,6 +48,12 @@ class MySqlPool {
     MySqlPool* pool_;
     MYSQL* conn_;
   };
+
+  // 阻塞获取一条连接；池空时等待。失败（构造空租约）返回假值
+  Lease acquire();
+
+  // 归还连接（内部探活，失效则重建）
+  void release(MYSQL* c);
 
  private:
   void create_one();  // 新建一条连接并放入空闲队列

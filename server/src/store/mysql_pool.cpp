@@ -29,12 +29,12 @@ void MySqlPool::create_one() {
   free_.push_back(c);
 }
 
-MYSQL* MySqlPool::acquire() {
+MySqlPool::Lease MySqlPool::acquire() {
   std::unique_lock<std::mutex> lock(mtx_);
   cv_.wait(lock, [this] { return !free_.empty(); });
   MYSQL* c = free_.front();
   free_.pop_front();
-  return c;
+  return Lease(this, c);
 }
 
 void MySqlPool::release(MYSQL* c) {

@@ -7,6 +7,7 @@
 // =============================================================
 #ifdef HAVE_MYSQL
 
+#include "mysql_pool.h"
 #include "store.h"
 
 #include <string>
