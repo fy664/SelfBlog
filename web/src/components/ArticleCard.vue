@@ -14,18 +14,12 @@ function fmtDate(s) {
   if (!s) return ''
   return s.slice(0, 10)
 }
-
-// 封面色：按文章 id 从青绿系色板取一个，作为无封面时的视觉块
-const covers = ['#0f766e', '#1d4ed8', '#b45309', '#be185d', '#4d7c0f', '#7c3aed']
-function coverColor(id) {
-  return covers[id % covers.length]
-}
 </script>
 
 <template>
   <article class="card card-hover article-card" @click="router.push(`/article/${article.id}`)">
-    <!-- 顶色条：无封面图时的视觉标识 -->
-    <div class="cover" :style="{ background: coverColor(article.id) }">
+    <!-- 顶色条：取主题主色（--hero-from），随主题切换自动换色 -->
+    <div class="cover">
       <span class="cover-tag">{{ article.status === 'draft' ? '草稿' : '文章' }}</span>
     </div>
 
@@ -51,6 +45,7 @@ function coverColor(id) {
 .article-card { overflow: hidden; cursor: pointer; display: flex; flex-direction: column; }
 .cover {
   height: 56px;
+  background: var(--cover, var(--hero-from, #0f766e));  /* 主题色条，随 data-theme 自动变化 */
   display: flex; align-items: center; justify-content: flex-end;
   padding: 0 12px;
 }

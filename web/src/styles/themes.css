@@ -25,6 +25,7 @@
   --code-block-bg: #0f172a;
   --quote-bg: #f0fdfa;
   --accent-soft: #ccfbf1;
+  --cover: #0f766e;             /* 文章卡顶色条（随主题） */
   --hero-from: #0f766e;
   --hero-to: #134e4a;
 
@@ -52,6 +53,7 @@
   --code-block-bg: #292524;
   --quote-bg: #f5f5f4;
   --accent-soft: #e7e5e4;
+  --cover: #57534e;
   --hero-from: #57534e;
   --hero-to: #292524;
 
@@ -88,6 +90,7 @@
   --code-block-bg: #020617;
   --quote-bg: #0f172a;
   --accent-soft: #164e46;
+  --cover: #164e63;             /* 深蓝青，与晨光区分 */
   --hero-from: #0f766e;
   --hero-to: #022c22;
 
@@ -120,6 +123,7 @@
   --code-block-bg: #05070a;
   --quote-bg: #13170f;
   --accent-soft: #1c2a10;
+  --cover: #1a2e0e;
   --hero-from: #1a2e0e;
   --hero-to: #05070a;
   --radius: 0px;                /* 直角 = 终端质感 */
@@ -161,6 +165,7 @@
   --code-block-bg: #1c1917;
   --quote-bg: #ece5d4;
   --accent-soft: #eadfd0;
+  --cover: #b3261e;             /* 报头深红 */
   --hero-from: #1c1917;
   --hero-to: #b3261e;
   --radius: 2px;
@@ -200,6 +205,7 @@
   --code-block-bg: #0a0d18;
   --quote-bg: #151a2b;
   --accent-soft: #241f45;
+  --cover: #312e81;
   --hero-from: #312e81;
   --hero-to: #1e1b4b;
   --radius: 16px;
