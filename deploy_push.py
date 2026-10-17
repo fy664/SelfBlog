@@ -65,13 +65,14 @@ def push_backend():
          "src", "CMakeLists.txt", "third_party"], "打包后端源码")
     run(["scp", "-q", tgz, SERVER + ":/tmp/push_be.tgz"], "上传后端源码包")
     build = ("cd /opt/selfblog/server && "
+             "tar -xf /tmp/push_be.tgz && rm /tmp/push_be.tgz && "
              "cmake -B build -DCMAKE_BUILD_TYPE=Release > /dev/null && "
              "cmake --build build -j2 && "
              "pkill -x blog_server || true; sleep 1; "
              "nohup ./build/blog_server > server.log 2>&1 & "
-             "sleep 2; rm /tmp/push_be.tgz; "
+             "sleep 2; "
              "curl -s http://127.0.0.1:8080/api/health")
-    ssh(build, "服务器编译 + 重启后端（约 1-2 分钟）")
+    ssh(build, "服务器解包源码 + 编译 + 重启后端（约 1-2 分钟）")
     print("  -> 后端已更新")
 
 
