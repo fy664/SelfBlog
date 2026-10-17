@@ -37,11 +37,21 @@ http.interceptors.response.use(
   },
   (err) => {
     const status = err.response?.status
-    const msg = err.response?.data?.msg || err.message
+    const data = err.response?.data
+    // 统一错误日志：时间戳 + 方法/地址/状态码 + 后端消息，便于排查
+    const ts = new Date().toISOString()
+    const url = err.config?.url || ''
+    const method = (err.config?.method || '').toUpperCase()
+    const msg = data?.msg || err.message || '网络错误'
+    console.error(`[API ${ts}] ${method} ${url} -> ${status} | ${msg}`)
+
     if (status === 401) {
       localStorage.removeItem('blog_token')
       localStorage.removeItem('blog_user')
       if (!location.pathname.startsWith('/login')) location.href = '/login'
+    } else if (status === 500) {
+      // 后端已统一返回标准 JSON；兜底文案避免裸 500 时用户看到英文通用错误
+      ElMessage.error(data?.msg || '服务器内部错误，请稍后重试或联系管理员查看日志')
     } else {
       ElMessage.error(msg || '网络错误')
     }

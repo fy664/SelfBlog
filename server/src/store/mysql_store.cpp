@@ -2,6 +2,8 @@
 
 #ifdef HAVE_MYSQL
 
+#include "../util/logger.h"
+
 #include <mysql.h>
 
 #include <cstdio>
@@ -21,6 +23,7 @@ bool exec_stmt(MYSQL* c, const std::string& sql,
   if (!stmt) return false;
   if (mysql_stmt_prepare(stmt, sql.c_str(), (unsigned long)sql.size()) != 0) {
     fprintf(stderr, "[MySqlStore] prepare失败: %s\n", mysql_stmt_error(stmt));
+    logger::error(std::string("[MySqlStore] prepare失败: ") + mysql_stmt_error(stmt));
     mysql_stmt_close(stmt);
     return false;
   }
@@ -42,12 +45,16 @@ bool exec_stmt(MYSQL* c, const std::string& sql,
     }
     if (mysql_stmt_bind_param(stmt, binds.data()) != 0) {
       fprintf(stderr, "[MySqlStore] bind_param失败: %s\n", mysql_stmt_error(stmt));
+      logger::error(std::string("[MySqlStore] bind_param失败: ") + mysql_stmt_error(stmt));
       mysql_stmt_close(stmt);
       return false;
     }
   }
   bool ok = mysql_stmt_execute(stmt) == 0;
-  if (!ok) fprintf(stderr, "[MySqlStore] execute失败: %s\n", mysql_stmt_error(stmt));
+  if (!ok) {
+    fprintf(stderr, "[MySqlStore] execute失败: %s\n", mysql_stmt_error(stmt));
+    logger::error(std::string("[MySqlStore] execute失败: ") + mysql_stmt_error(stmt));
+  }
   mysql_stmt_close(stmt);
   return ok;
 }
@@ -61,6 +68,7 @@ bool query_rows(MYSQL* c, const std::string& sql,
   if (!stmt) return false;
   if (mysql_stmt_prepare(stmt, sql.c_str(), (unsigned long)sql.size()) != 0) {
     fprintf(stderr, "[MySqlStore] prepare失败: %s\n", mysql_stmt_error(stmt));
+    logger::error(std::string("[MySqlStore] prepare失败: ") + mysql_stmt_error(stmt));
     mysql_stmt_close(stmt);
     return false;
   }
@@ -82,6 +90,7 @@ bool query_rows(MYSQL* c, const std::string& sql,
     }
     if (mysql_stmt_bind_param(stmt, binds.data()) != 0) {
       fprintf(stderr, "[MySqlStore] bind_param失败: %s\n", mysql_stmt_error(stmt));
+      logger::error(std::string("[MySqlStore] bind_param失败: ") + mysql_stmt_error(stmt));
       mysql_stmt_close(stmt);
       return false;
     }

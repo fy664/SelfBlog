@@ -2,6 +2,7 @@
 
 #include "store/store.h"
 #include "util/jwt.h"
+#include "util/logger.h"
 #include "util/misc.h"
 
 #include <nlohmann/json.hpp>
@@ -10,6 +11,7 @@
 #include <cctype>
 #include <regex>
 #include <sstream>
+#include <chrono>
 
 namespace blog {
 
@@ -57,6 +59,22 @@ std::string trim(const std::string& s) {
   while (b < e && std::isspace((unsigned char)s[b])) ++b;
   while (e > b && std::isspace((unsigned char)s[e - 1])) --e;
   return s.substr(b, e - b);
+}
+
+// 从 JSON 安全读取整数：支持数字或数字字符串（如前端传来的 "2"）
+// 缺失/非法时返回默认值，绝不抛异常（nlohmann 直接 get 会抛 type_error 导致 500）
+int64_t json_int(const json& body, const char* key, int64_t def) {
+  if (!body.contains(key)) return def;
+  const auto& v = body[key];
+  if (v.is_number_integer()) return v.get<int64_t>();
+  if (v.is_string()) {
+    try {
+      return std::stoll(v.get<std::string>());
+    } catch (...) {
+      return def;
+    }
+  }
+  return def;
 }
 
 // ---------- 鉴权辅助 ----------
@@ -464,7 +482,7 @@ void handle_comment_create(const httplib::Request& req, httplib::Response& res, 
   if (!require_user(req, res, ctx, u)) return;
   json body;
   if (!parse_body(req, res, body)) return;
-  int64_t article_id = body.value("article_id", 0LL);
+  int64_t article_id = json_int(body, "article_id", 0);
   std::string content = trim(body.value("content", ""));
   if (article_id <= 0) {
     fail(res, 1201, "缺少 article_id", 400);
@@ -511,6 +529,29 @@ void handle_stat_overview(const httplib::Request& req, httplib::Response& res, C
 // ---------- 路由注册 ----------
 
 void register_routes(httplib::Server& svr, Ctx& ctx) {
+  // ---- 错误日志体系 ----
+  // 1) 未捕获异常兜底：记 ERROR 日志 + 返回标准 JSON 500（而不是空响应）
+  svr.set_exception_handler([&ctx](const httplib::Request& req,
+                                   httplib::Response& res,
+                                   std::exception_ptr ep) {
+    try {
+      if (ep) std::rethrow_exception(ep);
+    } catch (const std::exception& e) {
+      logger::error("[异常] " + req.method + " " + req.path +
+                    " -> " + e.what());
+    } catch (...) {
+      logger::error("[异常] " + req.method + " " + req.path + " -> 未知异常");
+    }
+    send_json(res, 500, 500, "服务器内部错误，请查看后端日志", json::object());
+  });
+
+  // 2) 访问日志：每个请求记 method / path / 状态码 / 耗时 / 客户端 IP
+  svr.set_logger([&ctx](const httplib::Request& req, const httplib::Response& res) {
+    (void)ctx;
+    logger::info("[访问] " + req.method + " " + req.path + " -> " +
+                 std::to_string(res.status) + " (" + req.remote_addr + ")");
+  });
+
   // CORS：预检直接放行，业务响应统一带跨域头
   svr.set_pre_routing_handler([&ctx](const httplib::Request& req, httplib::Response& res) {
     res.set_header("Access-Control-Allow-Origin", "*");

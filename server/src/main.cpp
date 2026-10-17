@@ -18,6 +18,7 @@
 #include "handlers.h"
 #include "store/json_store.h"
 #include "store/store.h"
+#include "util/logger.h"
 #include "util/misc.h"
 #include "util/sha256.h"
 
@@ -84,6 +85,12 @@ int main() {
   std::printf("[配置] host=%s port=%d store=%s\n", cfg.host.c_str(), cfg.port,
               cfg.store.c_str());
 
+  // 1.5) 初始化日志系统（目录 ./logs，按天滚动）
+  blog::logger::init("./logs");
+  blog::logger::info("==== 后端启动 ====");
+  blog::logger::info("[配置] host=" + cfg.host + " port=" +
+                     std::to_string(cfg.port) + " store=" + cfg.store);
+
   // 2) SHA-256 自检
   if (util::sha256_self_test()) {
     std::printf("[自检] SHA-256 实现通过官方测试向量\n");
@@ -144,6 +151,9 @@ int main() {
   std::printf("[监听] 启动 HTTP 服务 http://%s:%d\n", cfg.host.c_str(), cfg.port);
   std::printf("       接口一览：/api/health /api/auth/register|login "
               "/api/articles /api/tags /api/comments /api/stat/overview\n");
+  blog::logger::info("[监听] 启动 HTTP 服务 http://" + cfg.host + ":" +
+                     std::to_string(cfg.port));
+  blog::logger::info("[日志] 访问与错误日志写入 ./logs/backend-YYYYMMDD.log");
 
   if (!svr.listen(cfg.host.c_str(), cfg.port)) {
     std::printf("[错误] 端口 %d 监听失败（可能被占用）\n", cfg.port);
