@@ -5,8 +5,8 @@
 import http from './http'
 
 // ---- 鉴权 ----
-export const register = (username, password) =>
-  http.post('/auth/register', { username, password })
+export const register = (username, password, deviceId) =>
+  http.post('/auth/register', { username, password, device_id: deviceId })
 
 export const login = (username, password) =>
   http.post('/auth/login', { username, password })

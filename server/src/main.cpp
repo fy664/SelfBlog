@@ -130,7 +130,7 @@ int main() {
       std::string err;
       if (repo->create_user(cfg.admin.username,
                             util::password_hash(cfg.admin.password), "admin",
-                            "", err)) {
+                            "", "", err)) {
         std::printf("[引导] 管理员账号已创建: %s（密码见 config.json）\n",
                     cfg.admin.username.c_str());
       } else {

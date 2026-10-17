@@ -29,7 +29,7 @@ function roleLabel(r) {
   <div class="panel" v-loading="loading">
     <div class="head">
       <h3>用户管理</h3>
-      <span class="hint">共 {{ users.length }} 个账号 · 同一 IP 仅允许注册一个账号</span>
+      <span class="hint">共 {{ users.length }} 个账号 · 同一设备仅允许注册一个账号</span>
     </div>
 
     <div class="card table-wrap">
@@ -40,6 +40,7 @@ function roleLabel(r) {
             <th>用户名</th>
             <th>角色</th>
             <th>注册 IP</th>
+            <th>设备 ID</th>
             <th>注册时间</th>
           </tr>
         </thead>
@@ -53,10 +54,11 @@ function roleLabel(r) {
               </span>
             </td>
             <td class="mono">{{ u.register_ip || '-' }}</td>
+            <td class="mono dev">{{ u.device_id ? u.device_id.slice(0, 8) + '…' : '-' }}</td>
             <td class="mono">{{ u.created_at }}</td>
           </tr>
           <tr v-if="!users.length">
-            <td colspan="5" class="empty">暂无用户</td>
+            <td colspan="6" class="empty">暂无用户</td>
           </tr>
         </tbody>
       </table>
@@ -81,6 +83,7 @@ function roleLabel(r) {
 }
 .tbl th { font-size: 12px; color: var(--text-2); font-weight: 600; background: var(--code-bg); }
 .mono { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12px; }
+.dev { color: var(--text-2); }
 
 .tag {
   display: inline-block; padding: 2px 10px; border-radius: 999px;

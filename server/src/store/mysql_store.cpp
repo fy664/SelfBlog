@@ -166,27 +166,28 @@ MySqlStore::MySqlStore(const Config& cfg)
 
 bool MySqlStore::create_user(const std::string& username, const std::string& password,
                              const std::string& role, const std::string& register_ip,
-                             std::string& err) {
+                             const std::string& device_id, std::string& err) {
   auto lease = pool_.acquire();
   if (!lease) { err = "数据库连接不可用"; return false; }
   // 预编译 INSERT，username 唯一约束冲突即失败
   if (!exec_stmt(lease.get(),
-                 "INSERT INTO `user`(`username`,`password`,`role`,`register_ip`)"
-                 " VALUES(?,?,?,?)",
-                 {username, password, role, register_ip})) {
+                 "INSERT INTO `user`(`username`,`password`,`role`,`register_ip`,`device_id`)"
+                 " VALUES(?,?,?,?,?)",
+                 {username, password, role, register_ip, device_id})) {
     err = "创建用户失败（可能用户名已存在）";
     return false;
   }
   return true;
 }
 
-bool MySqlStore::user_ip_exists(const std::string& ip) {
+bool MySqlStore::user_device_exists(const std::string& device_id) {
   auto lease = pool_.acquire();
   if (!lease) return false;
+  if (device_id.empty()) return false;
   std::vector<std::vector<std::string>> rows;
   if (!query_rows(lease.get(),
-                  "SELECT COUNT(*) FROM `user` WHERE `register_ip`=? LIMIT 1",
-                  {ip}, rows) || rows.empty()) {
+                  "SELECT COUNT(*) FROM `user` WHERE `device_id`=? LIMIT 1",
+                  {device_id}, rows) || rows.empty()) {
     return false;
   }
   return rows[0][0] != "0";
@@ -197,7 +198,7 @@ bool MySqlStore::list_users(std::vector<User>& out) {
   if (!lease) return false;
   std::vector<std::vector<std::string>> rows;
   if (!query_rows(lease.get(),
-                  "SELECT `id`,`username`,`role`,`register_ip`,`created_at` "
+                  "SELECT `id`,`username`,`role`,`register_ip`,`device_id`,`created_at` "
                   "FROM `user` ORDER BY `id`",
                   {}, rows)) {
     return false;
@@ -208,7 +209,8 @@ bool MySqlStore::list_users(std::vector<User>& out) {
     u.username = r[1];
     u.role = r[2];
     u.register_ip = r[3];
-    u.created_at = r[4];
+    u.device_id = r[4];
+    u.created_at = r[5];
     out.push_back(u);
   }
   return true;
@@ -219,7 +221,7 @@ bool MySqlStore::get_user_by_name(const std::string& username, User& out) {
   if (!lease) return false;
   std::vector<std::vector<std::string>> rows;
   if (!query_rows(lease.get(),
-                  "SELECT `id`,`username`,`password`,`role`,`register_ip`,`created_at` "
+                  "SELECT `id`,`username`,`password`,`role`,`register_ip`,`device_id`,`created_at` "
                   "FROM `user` WHERE `username`=? LIMIT 1",
                   {username}, rows) ||
       rows.empty()) {
@@ -230,7 +232,8 @@ bool MySqlStore::get_user_by_name(const std::string& username, User& out) {
   out.password = rows[0][2];
   out.role = rows[0][3];
   out.register_ip = rows[0][4];
-  out.created_at = rows[0][5];
+  out.device_id = rows[0][5];
+  out.created_at = rows[0][6];
   return true;
 }
 
@@ -239,7 +242,7 @@ bool MySqlStore::get_user_by_id(int64_t id, User& out) {
   if (!lease) return false;
   std::vector<std::vector<std::string>> rows;
   if (!query_rows(lease.get(),
-                  "SELECT `id`,`username`,`password`,`role`,`register_ip`,`created_at` "
+                  "SELECT `id`,`username`,`password`,`role`,`register_ip`,`device_id`,`created_at` "
                   "FROM `user` WHERE `id`=? LIMIT 1",
                   {std::to_string(id)}, rows) ||
       rows.empty()) {
@@ -250,7 +253,8 @@ bool MySqlStore::get_user_by_id(int64_t id, User& out) {
   out.password = rows[0][2];
   out.role = rows[0][3];
   out.register_ip = rows[0][4];
-  out.created_at = rows[0][5];
+  out.device_id = rows[0][5];
+  out.created_at = rows[0][6];
   return true;
 }
 

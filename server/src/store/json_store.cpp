@@ -52,6 +52,7 @@ bool JsonStore::create_user(const std::string& username,
                             const std::string& password,
                             const std::string& role,
                             const std::string& register_ip,
+                            const std::string& device_id,
                             std::string& err) {
   std::lock_guard<std::mutex> lock(mtx_);
   auto users = load(kUsers);
@@ -69,16 +70,18 @@ bool JsonStore::create_user(const std::string& username,
                    {"avatar", nullptr},
                    {"role", role},
                    {"register_ip", register_ip},
+                   {"device_id", device_id},
                    {"created_at", util::now_iso()}});
   save(kUsers, users);
   return true;
 }
 
-bool JsonStore::user_ip_exists(const std::string& ip) {
+bool JsonStore::user_device_exists(const std::string& device_id) {
   std::lock_guard<std::mutex> lock(mtx_);
+  if (device_id.empty()) return false;
   auto users = load(kUsers);
   for (auto& u : users) {
-    if (u.value("register_ip", "") == ip) return true;
+    if (u.value("device_id", "") == device_id) return true;
   }
   return false;
 }
@@ -92,6 +95,7 @@ bool JsonStore::list_users(std::vector<User>& out) {
     x.username = u["username"].get<std::string>();
     x.role = u.value("role", "author");
     x.register_ip = u.value("register_ip", "");
+    x.device_id = u.value("device_id", "");
     x.created_at = u.value("created_at", "");
     out.push_back(x);
   }
@@ -108,6 +112,7 @@ bool JsonStore::get_user_by_name(const std::string& username, User& out) {
       out.password = u["password"].get<std::string>();
       out.role = u["role"].get<std::string>();
       out.register_ip = u.value("register_ip", "");
+      out.device_id = u.value("device_id", "");
       out.created_at = u["created_at"].get<std::string>();
       return true;
     }
@@ -125,6 +130,7 @@ bool JsonStore::get_user_by_id(int64_t id, User& out) {
       out.password = u["password"].get<std::string>();
       out.role = u["role"].get<std::string>();
       out.register_ip = u.value("register_ip", "");
+      out.device_id = u.value("device_id", "");
       out.created_at = u["created_at"].get<std::string>();
       return true;
     }

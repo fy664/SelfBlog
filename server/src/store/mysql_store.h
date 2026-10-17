@@ -29,10 +29,10 @@ class MySqlStore : public Repository {
 
   bool create_user(const std::string& username, const std::string& password,
                    const std::string& role, const std::string& register_ip,
-                   std::string& err) override;
+                   const std::string& device_id, std::string& err) override;
   bool get_user_by_name(const std::string& username, User& out) override;
   bool get_user_by_id(int64_t id, User& out) override;
-  bool user_ip_exists(const std::string& ip) override;
+  bool user_device_exists(const std::string& device_id) override;
   bool list_users(std::vector<User>& out) override;
 
   int64_t create_article(const Article& a, std::string& err) override;

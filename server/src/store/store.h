@@ -20,7 +20,8 @@ struct User {
   std::string password;   // 存储格式：盐$SHA256hex
   std::string avatar;
   std::string role;       // admin / author
-  std::string register_ip; // 注册时的客户端 IP（IP 限注册用）
+  std::string register_ip; // 注册时的客户端 IP（审计用）
+  std::string device_id;  // 注册时的设备 ID（设备限注册用，前端 localStorage 生成）
   std::string created_at;
 };
 
@@ -74,11 +75,12 @@ class Repository {
                            const std::string& password,
                            const std::string& role,
                            const std::string& register_ip,
+                           const std::string& device_id,
                            std::string& err) = 0;
   virtual bool get_user_by_name(const std::string& username, User& out) = 0;
   virtual bool get_user_by_id(int64_t id, User& out) = 0;
-  // 该 IP 是否已注册过账号（IP 限注册）
-  virtual bool user_ip_exists(const std::string& ip) = 0;
+  // 该设备 ID 是否已注册过账号（设备限注册）
+  virtual bool user_device_exists(const std::string& device_id) = 0;
   // 用户列表（后台管理，仅 admin）
   virtual bool list_users(std::vector<User>& out) = 0;
 

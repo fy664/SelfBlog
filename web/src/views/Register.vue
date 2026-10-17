@@ -7,6 +7,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { register } from '../api'
+import { getDeviceId } from '../utils/device'
 
 const router = useRouter()
 const form = ref({ username: '', password: '', confirm: '' })
@@ -26,11 +27,12 @@ async function submit() {
   if (password !== confirm) { ElMessage.warning('两次输入的密码不一致'); return }
   loading.value = true
   try {
-    await register(username, password)
+    // 携带设备 ID：同一设备只能注册一个账号（后端校验）
+    await register(username, password, getDeviceId())
     ElMessage.success('注册成功，请登录')
     router.push('/login')
   } catch (e) {
-    // 后端错误（如用户名已存在）已由拦截器弹出
+    // 后端错误（如用户名已存在、该设备已注册）已由拦截器弹出
   } finally {
     loading.value = false
   }

@@ -162,13 +162,15 @@ void handle_register(const httplib::Request& req, httplib::Response& res, Ctx& c
     fail(res, 1001, err, 400);
     return;
   }
-  // IP 限注册：同一个 IP 只能注册一个账号（防批量刷号）
+  // 设备限注册：同一个设备 ID 只能注册一个账号（前端 localStorage 生成的持久标识）
+  // IP 仅做审计记录，不再作为注册拦截条件
   std::string ip = client_ip(req);
-  if (!ip.empty() && ctx.repo->user_ip_exists(ip)) {
-    fail(res, 1006, "该 IP 已注册过账号，同一 IP 仅允许注册一个账号", 403);
+  std::string device_id = trim(body.value("device_id", ""));
+  if (ctx.repo->user_device_exists(device_id)) {
+    fail(res, 1006, "该设备已注册过账号，同一设备仅允许注册一个账号", 403);
     return;
   }
-  if (!ctx.repo->create_user(username, util::password_hash(password), "author", ip, err)) {
+  if (!ctx.repo->create_user(username, util::password_hash(password), "author", ip, device_id, err)) {
     fail(res, 1002, err, 409);
     return;
   }
@@ -250,6 +252,7 @@ void handle_admin_users(const httplib::Request& req, httplib::Response& res, Ctx
                    {"username", x.username},
                    {"role", x.role},
                    {"register_ip", x.register_ip},
+                   {"device_id", x.device_id},
                    {"created_at", x.created_at}});
   }
   ok(res, {{"items", arr}});
