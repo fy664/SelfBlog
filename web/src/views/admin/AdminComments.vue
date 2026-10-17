@@ -15,6 +15,7 @@ const router = useRouter()
 const store = useUserStore()
 const list = ref([])        // [{id, article_id, article_title, username, content, created_at, user_id}]
 const loading = ref(true)
+const myArticleIds = ref(new Set())  // 普通用户：自己文章的 id 集合（归属者可删文章下评论）
 
 async function load() {
   loading.value = true
@@ -62,6 +63,7 @@ async function load() {
       for (const c of mine) push(c, c.article_title)
       // ② 自己文章下的全部评论（status=all 后端按作者过滤返回本人文章，含草稿）
       const data = await fetchArticles({ page: 1, size: 50, status: 'all', sort: 'time' })
+      myArticleIds.value = new Set(data.items.map((a) => a.id))
       for (const a of data.items) {
         const comments = await fetchComments(a.id)
         for (const c of comments) push(c, a.title)
@@ -78,9 +80,11 @@ async function load() {
 
 onMounted(load)
 
-// 能否删除：自己的评论，或管理员可删任意（后端同样校验）
+// 能否删除：自己的评论、管理员，或该评论所在文章的作者（归属者，后端同样校验）
 function canDelete(c) {
-  return store.user && (store.user.id === c.user_id || store.isAdmin)
+  if (!store.user) return false
+  if (store.isAdmin || store.user.id === c.user_id) return true
+  return myArticleIds.value.has(c.article_id)
 }
 
 // 删除评论

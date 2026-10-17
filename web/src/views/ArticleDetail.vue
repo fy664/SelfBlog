@@ -36,9 +36,11 @@ async function loadComments() {
   comments.value = await fetchComments(route.params.id)
 }
 
-// 能否删除某条评论：自己的评论，或管理员可删任意
+// 能否删除某条评论：自己的评论、管理员，或该文章的作者（归属者）
 function canDelete(c) {
-  return store.user && (store.user.id === c.user_id || store.isAdmin)
+  if (!store.user) return false
+  if (store.isAdmin || store.user.id === c.user_id) return true
+  return article.value && article.value.user_id === store.user.id
 }
 
 // 删除评论：作者本人或管理员（后端同样校验）

@@ -552,9 +552,16 @@ void handle_comment_delete(const httplib::Request& req, httplib::Response& res, 
     fail(res, 404, "评论不存在", 404);
     return;
   }
-  // 权限：作者本人或管理员可删除；普通用户只能删自己的评论
-  if (c.user_id != u.id && u.role != "admin") {
-    fail(res, 403, "无权删除他人评论", 403);
+  // 权限：评论作者本人、管理员、或该评论所在文章的作者（文章归属者）可删除
+  bool can_delete = (c.user_id == u.id) || (u.role == "admin");
+  if (!can_delete) {
+    Article a;
+    if (ctx.repo->get_article_by_id(c.article_id, a, false) && a.user_id == u.id) {
+      can_delete = true;
+    }
+  }
+  if (!can_delete) {
+    fail(res, 403, "无权删除该评论", 403);
     return;
   }
   std::string err;
