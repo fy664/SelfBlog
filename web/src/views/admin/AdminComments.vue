@@ -1,21 +1,27 @@
 <script setup>
 // =============================================================
-// 评论管理：列出全站最新评论（含所属文章），可删除
-// 说明：后端当前仅提供按文章查评论，这里对每篇文章查询会较慢，
-// 故以最近发布的文章逐个拉取前 N 篇的方式汇总（MVP 展示用）
+// 评论管理：按角色展示评论，可删除
+//   admin：看全部已发布文章下的评论
+//   普通用户：只看自己文章下的评论（后端 status=all 按作者过滤）
+// 删除按钮仅对「自己的评论」或 admin 显示（后端同样校验）
 // =============================================================
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { fetchArticles, fetchComments, deleteComment } from '../../api'
+import { useUserStore } from '../../store/user'
 
+const router = useRouter()
+const store = useUserStore()
 const list = ref([])        // [{id, article_id, article_title, username, content, created_at}]
 const loading = ref(true)
 
 async function load() {
   loading.value = true
   try {
-    // 取最近 5 篇已发布文章，拉取各自评论
-    const data = await fetchArticles({ page: 1, size: 5, status: 'published', sort: 'time' })
+    // admin 看全部已发布文章；普通用户用 status=all（后端按 owner 过滤为本人文章）
+    const status = store.isAdmin ? 'published' : 'all'
+    const data = await fetchArticles({ page: 1, size: 5, status, sort: 'time' })
     const rows = []
     for (const a of data.items) {
       const comments = await fetchComments(a.id)
@@ -26,7 +32,8 @@ async function load() {
           article_title: a.title,
           username: c.username,
           content: c.content,
-          created_at: c.created_at
+          created_at: c.created_at,
+          user_id: c.user_id
         })
       }
     }
@@ -42,7 +49,12 @@ async function load() {
 
 onMounted(load)
 
-// 删除任意评论（管理员权限，后端校验）
+// 能否删除：自己的评论，或管理员可删任意（后端同样校验）
+function canDelete(c) {
+  return store.user && (store.user.id === c.user_id || store.isAdmin)
+}
+
+// 删除评论
 async function removeComment(c) {
   try {
     await deleteComment(c.id)
@@ -53,9 +65,9 @@ async function removeComment(c) {
   }
 }
 
-// 跳转到对应文章
+// 跳转到对应文章：SPA 内部跳转（不整页刷新，深层 URL 也不会触发资源解析错误）
 function goArticle(id) {
-  location.href = `/article/${id}`
+  router.push(`/article/${id}`)
 }
 </script>
 
@@ -81,7 +93,13 @@ function goArticle(id) {
           <span class="row-article" @click="goArticle(c.article_id)">
             评论于《{{ c.article_title }}》
           </span>
-          <el-button link type="danger" size="small" @click="removeComment(c)">删除</el-button>
+          <el-button
+            v-if="canDelete(c)"
+            link
+            type="danger"
+            size="small"
+            @click="removeComment(c)"
+          >删除</el-button>
         </div>
       </div>
     </div>

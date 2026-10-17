@@ -98,7 +98,8 @@ a { color: inherit; text-decoration: none; }
 .md-body img { max-width: 100%; border-radius: 8px; }
 .md-body table { border-collapse: collapse; width: 100%; margin: 1em 0; }
 .md-body th, .md-body td { border: 1px solid var(--border); padding: 8px 12px; }
-.md-body th { background: #f8fafc; }
+/* 表头背景随主题（浅色主题为浅灰、深色主题为深灰，与行内代码一致） */
+.md-body th { background: var(--code-bg); }
 
 /* 移动端基础适配 */
 @media (max-width: 640px) {
