@@ -1,5 +1,7 @@
 #include "base64.h"
 
+#include <cstdint>  // uint32_t（g++ 严格模式必需；MSVC 隐式包含但 Linux 编译会报错）
+
 namespace util {
 
 namespace {
