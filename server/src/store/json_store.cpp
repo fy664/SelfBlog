@@ -50,7 +50,9 @@ void JsonStore::save(const std::string& name, const nlohmann::json& data) {
 
 bool JsonStore::create_user(const std::string& username,
                             const std::string& password,
-                            const std::string& role, std::string& err) {
+                            const std::string& role,
+                            const std::string& register_ip,
+                            std::string& err) {
   std::lock_guard<std::mutex> lock(mtx_);
   auto users = load(kUsers);
   for (auto& u : users) {
@@ -66,8 +68,33 @@ bool JsonStore::create_user(const std::string& username,
                    {"password", password},
                    {"avatar", nullptr},
                    {"role", role},
+                   {"register_ip", register_ip},
                    {"created_at", util::now_iso()}});
   save(kUsers, users);
+  return true;
+}
+
+bool JsonStore::user_ip_exists(const std::string& ip) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  auto users = load(kUsers);
+  for (auto& u : users) {
+    if (u.value("register_ip", "") == ip) return true;
+  }
+  return false;
+}
+
+bool JsonStore::list_users(std::vector<User>& out) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  auto users = load(kUsers);
+  for (auto& u : users) {
+    User x;
+    x.id = u["id"].get<int64_t>();
+    x.username = u["username"].get<std::string>();
+    x.role = u.value("role", "author");
+    x.register_ip = u.value("register_ip", "");
+    x.created_at = u.value("created_at", "");
+    out.push_back(x);
+  }
   return true;
 }
 
@@ -80,6 +107,7 @@ bool JsonStore::get_user_by_name(const std::string& username, User& out) {
       out.username = u["username"].get<std::string>();
       out.password = u["password"].get<std::string>();
       out.role = u["role"].get<std::string>();
+      out.register_ip = u.value("register_ip", "");
       out.created_at = u["created_at"].get<std::string>();
       return true;
     }
@@ -96,6 +124,7 @@ bool JsonStore::get_user_by_id(int64_t id, User& out) {
       out.username = u["username"].get<std::string>();
       out.password = u["password"].get<std::string>();
       out.role = u["role"].get<std::string>();
+      out.register_ip = u.value("register_ip", "");
       out.created_at = u["created_at"].get<std::string>();
       return true;
     }

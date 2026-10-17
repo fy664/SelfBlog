@@ -16,15 +16,29 @@ USE blog;
 --    password 存 "盐$SHA256hex" 格式，见后端 util（MVP 说明）
 -- -------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `user` (
-  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '用户ID',
-  `username`   VARCHAR(32)     NOT NULL COMMENT '用户名（登录用，唯一）',
-  `password`   VARCHAR(128)    NOT NULL COMMENT '密码散列：salt$sha256hex',
-  `avatar`     VARCHAR(255)    DEFAULT NULL COMMENT '头像地址（预留）',
-  `role`       ENUM('admin','author') NOT NULL DEFAULT 'author' COMMENT '角色：管理员/作者',
-  `created_at` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
+  `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '用户ID',
+  `username`    VARCHAR(32)     NOT NULL COMMENT '用户名（登录用，唯一）',
+  `password`    VARCHAR(128)    NOT NULL COMMENT '密码散列：salt$sha256hex',
+  `avatar`      VARCHAR(255)    DEFAULT NULL COMMENT '头像地址（预留）',
+  `role`        ENUM('admin','author') NOT NULL DEFAULT 'author' COMMENT '角色：管理员/作者',
+  `register_ip` VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '注册时的客户端 IP（IP 限注册）',
+  `created_at`  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_username` (`username`)
+  UNIQUE KEY `uk_username` (`username`),
+  KEY `idx_register_ip` (`register_ip`)
 ) ENGINE=InnoDB COMMENT='用户表';
+
+-- 幂等迁移：对已存在的旧 user 表补充 register_ip 列（CREATE TABLE IF NOT EXISTS 不会改旧表）
+SET @col_exists := (
+  SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'user' AND COLUMN_NAME = 'register_ip'
+);
+SET @ddl := IF(@col_exists = 0,
+  'ALTER TABLE `user` ADD COLUMN `register_ip` VARCHAR(64) NOT NULL DEFAULT '''' COMMENT ''注册时的客户端 IP（IP 限注册）'', ADD KEY `idx_register_ip` (`register_ip`)',
+  'SELECT 1');
+PREPARE stmt FROM @ddl;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- -------------------------------------------------------------
 -- 2. 文章表 article

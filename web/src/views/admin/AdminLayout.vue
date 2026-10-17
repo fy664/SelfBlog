@@ -5,6 +5,7 @@
 // =============================================================
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../../store/user'
+import { computed } from 'vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -14,9 +15,19 @@ const menus = [
   { path: '/admin/articles', label: '文章管理', icon: '📄' },
   { path: '/admin/edit', label: '新建文章', icon: '✏️' },
   { path: '/admin/comments', label: '评论管理', icon: '💬' },
-  { path: '/admin/logs', label: '登录记录', icon: '🛡️' },
   { path: '/admin/stat', label: '数据看板', icon: '📊' }
 ]
+
+// 仅管理员可见的菜单（页面本身后端也做权限拦截）
+const adminMenus = [
+  { path: '/admin/users', label: '用户管理', icon: '👥' },
+  { path: '/admin/logs', label: '登录记录', icon: '🛡️' }
+]
+
+// 渲染用：普通用户看不到 admin 专属菜单
+const visibleMenus = computed(() =>
+  store.isAdmin ? [...menus, ...adminMenus] : menus
+)
 
 function isActive(p) {
   // 文章管理高亮也覆盖 /admin/edit/:id
@@ -36,7 +47,7 @@ function goHome() { router.push('/') }
         <span class="side-sub" @click="goHome">← 返回前台</span>
       </div>
       <div
-        v-for="m in menus"
+        v-for="m in visibleMenus"
         :key="m.path"
         class="menu-item"
         :class="{ active: isActive(m.path) }"

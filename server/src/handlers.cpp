@@ -144,13 +144,18 @@ void handle_register(const httplib::Request& req, httplib::Response& res, Ctx& c
     fail(res, 1001, err, 400);
     return;
   }
-  if (!ctx.repo->create_user(username, util::password_hash(password), "author", err)) {
+  // IP 限注册：同一个 IP 只能注册一个账号（防批量刷号）
+  std::string ip = client_ip(req);
+  if (!ip.empty() && ctx.repo->user_ip_exists(ip)) {
+    fail(res, 1006, "该 IP 已注册过账号，同一 IP 仅允许注册一个账号", 403);
+    return;
+  }
+  if (!ctx.repo->create_user(username, util::password_hash(password), "author", ip, err)) {
     fail(res, 1002, err, 409);
     return;
   }
   // 注册成功也记一条登录日志（审计：新账号从哪注册）
-  ctx.repo->record_login(username, client_ip(req),
-                         req.get_header_value("User-Agent"), true);
+  ctx.repo->record_login(username, ip, req.get_header_value("User-Agent"), true);
   User u;
   ctx.repo->get_user_by_name(username, u);
   ok(res, {{"id", u.id}, {"username", u.username}}, 201);
@@ -204,6 +209,30 @@ void handle_login_logs(const httplib::Request& req, httplib::Response& res, Ctx&
                    {"user_agent", l.user_agent},
                    {"success", l.success},
                    {"created_at", l.created_at}});
+  }
+  ok(res, {{"items", arr}});
+}
+
+// 后台：用户列表（仅管理员，不返回密码字段）
+void handle_admin_users(const httplib::Request& req, httplib::Response& res, Ctx& ctx) {
+  User u;
+  if (!require_user(req, res, ctx, u)) return;
+  if (u.role != "admin") {
+    fail(res, 403, "仅管理员可查看用户列表", 403);
+    return;
+  }
+  std::vector<User> users;
+  if (!ctx.repo->list_users(users)) {
+    fail(res, 500, "查询失败", 500);
+    return;
+  }
+  json arr = json::array();
+  for (auto& x : users) {
+    arr.push_back({{"id", x.id},
+                   {"username", x.username},
+                   {"role", x.role},
+                   {"register_ip", x.register_ip},
+                   {"created_at", x.created_at}});
   }
   ok(res, {{"items", arr}});
 }
@@ -538,6 +567,10 @@ void register_routes(httplib::Server& svr, Ctx& ctx) {
 
   svr.Get("/api/admin/login-logs", [&ctx](const httplib::Request& req, httplib::Response& res) {
     handle_login_logs(req, res, ctx);
+  });
+
+  svr.Get("/api/admin/users", [&ctx](const httplib::Request& req, httplib::Response& res) {
+    handle_admin_users(req, res, ctx);
   });
 }
 

@@ -41,3 +41,6 @@ export const fetchStat = () => http.get('/stat/overview')
 // ---- 登录日志（后台，仅管理员）----
 export const fetchLoginLogs = (limit = 50) =>
   http.get('/admin/login-logs', { params: { limit } })
+
+// ---- 用户列表（后台，仅管理员）----
+export const fetchUsers = () => http.get('/admin/users')
