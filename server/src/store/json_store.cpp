@@ -200,6 +200,7 @@ bool JsonStore::get_article_by_id(int64_t id, Article& out, bool increment_view)
 
 bool JsonStore::list_articles(int page, int size, const std::string& tag,
                               const std::string& sort, bool include_all,
+                              int64_t owner_id,
                               std::vector<Article>& out, int64_t& total) {
   std::lock_guard<std::mutex> lock(mtx_);
   auto articles = load(kArticles);
@@ -209,6 +210,8 @@ bool JsonStore::list_articles(int page, int size, const std::string& tag,
   for (auto& art : articles) {
     std::string status = art["status"].get<std::string>();
     if (!include_all && status != "published") continue;
+    // 普通用户管理列表：只看自己的文章（含草稿）；admin 传 0 看全部
+    if (owner_id > 0 && art["user_id"].get<int64_t>() != owner_id) continue;
     if (!tag.empty()) {
       bool hit = false;
       if (art.contains("tags") && art["tags"].is_array())
@@ -351,6 +354,42 @@ bool JsonStore::list_comments(int64_t article_id, std::vector<Comment>& out) {
   std::sort(out.begin(), out.end(), [](const Comment& a, const Comment& b) {
     return a.created_at < b.created_at;
   });
+  return true;
+}
+
+bool JsonStore::get_comment_by_id(int64_t id, Comment& out) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  auto comments = load(kComments);
+  for (auto& cm : comments) {
+    if (cm["id"].get<int64_t>() != id) continue;
+    out.id = cm["id"].get<int64_t>();
+    out.article_id = cm["article_id"].get<int64_t>();
+    out.user_id = cm["user_id"].get<int64_t>();
+    out.username = cm.value("username", "");
+    out.content = cm["content"].get<std::string>();
+    out.created_at = cm["created_at"].get<std::string>();
+    return true;
+  }
+  return false;
+}
+
+bool JsonStore::delete_comment(int64_t id, std::string& err) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  auto comments = load(kComments);
+  bool found = false;
+  nlohmann::json keep = nlohmann::json::array();
+  for (auto& cm : comments) {
+    if (cm["id"].get<int64_t>() == id) {
+      found = true;
+      continue;
+    }
+    keep.push_back(cm);
+  }
+  if (!found) {
+    err = "评论不存在";
+    return false;
+  }
+  save(kComments, keep);
   return true;
 }
 

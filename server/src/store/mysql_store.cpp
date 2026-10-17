@@ -336,6 +336,7 @@ bool MySqlStore::get_article_by_id(int64_t id, Article& out, bool increment_view
 
 bool MySqlStore::list_articles(int page, int size, const std::string& tag,
                                const std::string& sort, bool include_all,
+                               int64_t owner_id,
                                std::vector<Article>& out, int64_t& total) {
   auto lease = pool_.acquire();
   if (!lease) return false;
@@ -343,6 +344,12 @@ bool MySqlStore::list_articles(int page, int size, const std::string& tag,
   // 动态拼接 WHERE（参数全部走占位符，防注入）
   std::string where = include_all ? "" : " WHERE a.`status`='published'";
   std::vector<std::string> params;
+  // 普通用户管理列表：只看自己的文章（含草稿）；admin 传 0 不看全部
+  if (owner_id > 0) {
+    where += (where.empty() ? " WHERE " : " AND ");
+    where += "a.`user_id`=?";
+    params.push_back(std::to_string(owner_id));
+  }
   if (!tag.empty()) {
     where += (where.empty() ? " WHERE " : " AND ");
     where += "a.`id` IN (SELECT at.`article_id` FROM `article_tag` at "
@@ -471,6 +478,38 @@ bool MySqlStore::list_comments(int64_t article_id, std::vector<Comment>& out) {
     c.content = r[4];
     c.created_at = r[5];
     out.push_back(c);
+  }
+  return true;
+}
+
+bool MySqlStore::get_comment_by_id(int64_t id, Comment& out) {
+  auto lease = pool_.acquire();
+  if (!lease) return false;
+  std::vector<std::vector<std::string>> rows;
+  if (!query_rows(lease.get(),
+                  "SELECT c.`id`,c.`article_id`,c.`user_id`,u.`username`,"
+                  "c.`content`,c.`created_at` FROM `comment` c "
+                  "JOIN `user` u ON u.`id`=c.`user_id` WHERE c.`id`=?",
+                  {std::to_string(id)}, rows)) {
+    return false;
+  }
+  if (rows.empty()) return false;
+  out.id = std::stoll(rows[0][0]);
+  out.article_id = std::stoll(rows[0][1]);
+  out.user_id = std::stoll(rows[0][2]);
+  out.username = rows[0][3];
+  out.content = rows[0][4];
+  out.created_at = rows[0][5];
+  return true;
+}
+
+bool MySqlStore::delete_comment(int64_t id, std::string& err) {
+  auto lease = pool_.acquire();
+  if (!lease) { err = "数据库连接不可用"; return false; }
+  if (!exec_stmt(lease.get(), "DELETE FROM `comment` WHERE `id`=?",
+                 {std::to_string(id)})) {
+    err = "评论删除失败";
+    return false;
   }
   return true;
 }

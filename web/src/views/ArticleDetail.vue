@@ -6,7 +6,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { fetchArticle, fetchComments, createComment } from '../api'
+import { fetchArticle, fetchComments, createComment, deleteComment } from '../api'
 import MarkdownView from '../components/MarkdownView.vue'
 import { useUserStore } from '../store/user'
 
@@ -34,6 +34,22 @@ async function load() {
 
 async function loadComments() {
   comments.value = await fetchComments(route.params.id)
+}
+
+// 能否删除某条评论：自己的评论，或管理员可删任意
+function canDelete(c) {
+  return store.user && (store.user.id === c.user_id || store.isAdmin)
+}
+
+// 删除评论：作者本人或管理员（后端同样校验）
+async function removeComment(c) {
+  try {
+    await deleteComment(c.id)
+    ElMessage.success('评论已删除')
+    await loadComments()
+  } catch (e) {
+    // 失败提示已由拦截器处理
+  }
 }
 
 // 发布评论：未登录先跳登录页
@@ -104,7 +120,16 @@ onMounted(load)
           <div v-for="c in comments" :key="c.id" class="comment card">
             <div class="c-head">
               <b>{{ c.username }}</b>
-              <span class="c-time">{{ c.created_at?.slice(0, 16).replace('T', ' ') }}</span>
+              <div class="c-right">
+                <span class="c-time">{{ c.created_at?.slice(0, 16).replace('T', ' ') }}</span>
+                <el-button
+                  v-if="canDelete(c)"
+                  link
+                  type="danger"
+                  size="small"
+                  @click="removeComment(c)"
+                >删除</el-button>
+              </div>
             </div>
             <p class="c-body">{{ c.content }}</p>
           </div>
@@ -131,6 +156,7 @@ onMounted(load)
 .comment-list { display: flex; flex-direction: column; gap: 10px; }
 .comment { padding: 14px 16px; }
 .c-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.c-right { display: flex; align-items: center; gap: 10px; }
 .c-time { color: var(--text-2); font-size: 12px; }
 .c-body { margin: 0; font-size: 14px; line-height: 1.7; }
 

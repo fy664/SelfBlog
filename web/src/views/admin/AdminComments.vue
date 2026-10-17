@@ -6,12 +6,12 @@
 // =============================================================
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { fetchArticles, fetchComments } from '../../api'
+import { fetchArticles, fetchComments, deleteComment } from '../../api'
 
-const list = ref([])        // [{article_id, article_title, username, content, created_at}]
+const list = ref([])        // [{id, article_id, article_title, username, content, created_at}]
 const loading = ref(true)
 
-onMounted(async () => {
+async function load() {
   loading.value = true
   try {
     // 取最近 5 篇已发布文章，拉取各自评论
@@ -38,9 +38,22 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
 
-// 后端暂无"删评论"接口：提供跳转到对应文章的引导
+onMounted(load)
+
+// 删除任意评论（管理员权限，后端校验）
+async function removeComment(c) {
+  try {
+    await deleteComment(c.id)
+    ElMessage.success('评论已删除')
+    list.value = list.value.filter((x) => x.id !== c.id)
+  } catch (e) {
+    // 失败提示已由拦截器处理
+  }
+}
+
+// 跳转到对应文章
 function goArticle(id) {
   location.href = `/article/${id}`
 }
@@ -68,6 +81,7 @@ function goArticle(id) {
           <span class="row-article" @click="goArticle(c.article_id)">
             评论于《{{ c.article_title }}》
           </span>
+          <el-button link type="danger" size="small" @click="removeComment(c)">删除</el-button>
         </div>
       </div>
     </div>
@@ -87,7 +101,7 @@ function goArticle(id) {
 .row-head { display: flex; justify-content: space-between; margin-bottom: 6px; }
 .row-time { font-size: 12px; color: var(--text-2); }
 .row-body { margin: 0 0 8px; font-size: 14px; line-height: 1.7; }
-.row-foot { border-top: 1px dashed var(--border); padding-top: 8px; }
+.row-foot { border-top: 1px dashed var(--border); padding-top: 8px; display: flex; justify-content: space-between; align-items: center; }
 .row-article { font-size: 12px; color: var(--primary); cursor: pointer; }
 .empty { padding: 40px 0; }
 </style>

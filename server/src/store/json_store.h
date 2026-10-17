@@ -35,6 +35,7 @@ class JsonStore : public Repository {
   bool get_article_by_id(int64_t id, Article& out, bool increment_view) override;
   bool list_articles(int page, int size, const std::string& tag,
                      const std::string& sort, bool include_all,
+                     int64_t owner_id,
                      std::vector<Article>& out, int64_t& total) override;
   bool update_article(const Article& a, std::string& err) override;
   bool delete_article(int64_t id, std::string& err) override;
@@ -45,6 +46,8 @@ class JsonStore : public Repository {
   // 评论
   bool add_comment(const Comment& c, std::string& err) override;
   bool list_comments(int64_t article_id, std::vector<Comment>& out) override;
+  bool get_comment_by_id(int64_t id, Comment& out) override;
+  bool delete_comment(int64_t id, std::string& err) override;
 
   // 登录日志
   bool record_login(const std::string& username, const std::string& ip,

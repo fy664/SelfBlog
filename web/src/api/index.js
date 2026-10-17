@@ -35,6 +35,9 @@ export const fetchComments = (articleId) =>
 export const createComment = (articleId, content) =>
   http.post('/comments', { article_id: articleId, content })
 
+// 删除评论：作者本人或管理员可删（后端校验）
+export const deleteComment = (id) => http.delete(`/comments/${id}`)
+
 // ---- 统计（数据看板）----
 export const fetchStat = () => http.get('/stat/overview')
 

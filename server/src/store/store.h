@@ -87,6 +87,7 @@ class Repository {
   virtual bool get_article_by_id(int64_t id, Article& out, bool increment_view) = 0;
   virtual bool list_articles(int page, int size, const std::string& tag,
                              const std::string& sort, bool include_all,
+                             int64_t owner_id,  // >0 时仅返回该作者文章（普通用户看自己的；admin 传 0）
                              std::vector<Article>& out, int64_t& total) = 0;
   virtual bool update_article(const Article& a, std::string& err) = 0;
   virtual bool delete_article(int64_t id, std::string& err) = 0;
@@ -97,6 +98,8 @@ class Repository {
   // 评论
   virtual bool add_comment(const Comment& c, std::string& err) = 0;
   virtual bool list_comments(int64_t article_id, std::vector<Comment>& out) = 0;
+  virtual bool get_comment_by_id(int64_t id, Comment& out) = 0;
+  virtual bool delete_comment(int64_t id, std::string& err) = 0;
 
   // 登录日志
   virtual bool record_login(const std::string& username, const std::string& ip,

@@ -264,16 +264,20 @@ void handle_article_list(const httplib::Request& req, httplib::Response& res, Ct
   if (sort != "views") sort = "time";
 
   // status=all 需要登录（含草稿）；默认只列出已发布
+  // 权限：admin 可看全部；普通用户只看自己的文章
   bool include_all = false;
+  int64_t owner_id = 0;
   if (req.get_param_value("status") == "all") {
     User u;
-    if (require_user(req, res, ctx, u)) include_all = true;
-    else return;
+    if (require_user(req, res, ctx, u)) {
+      include_all = true;
+      if (u.role != "admin") owner_id = u.id;
+    } else return;
   }
 
   std::vector<Article> items;
   int64_t total = 0;
-  if (!ctx.repo->list_articles(page, size, tag, sort, include_all, items, total)) {
+  if (!ctx.repo->list_articles(page, size, tag, sort, include_all, owner_id, items, total)) {
     fail(res, 500, "查询失败", 500);
     return;
   }
@@ -510,6 +514,28 @@ void handle_comment_create(const httplib::Request& req, httplib::Response& res, 
   ok(res, json::object(), 201);
 }
 
+void handle_comment_delete(const httplib::Request& req, httplib::Response& res, Ctx& ctx) {
+  User u;
+  if (!require_user(req, res, ctx, u)) return;
+  int64_t id = std::stoll(req.matches[1].str());
+  Comment c;
+  if (!ctx.repo->get_comment_by_id(id, c)) {
+    fail(res, 404, "评论不存在", 404);
+    return;
+  }
+  // 权限：作者本人或管理员可删除；普通用户只能删自己的评论
+  if (c.user_id != u.id && u.role != "admin") {
+    fail(res, 403, "无权删除他人评论", 403);
+    return;
+  }
+  std::string err;
+  if (!ctx.repo->delete_comment(id, err)) {
+    fail(res, 500, err.empty() ? "评论删除失败" : err, 500);
+    return;
+  }
+  ok(res, json::object());
+}
+
 void handle_stat_overview(const httplib::Request& req, httplib::Response& res, Ctx& ctx) {
   User u;
   if (!require_user(req, res, ctx, u)) return;
@@ -600,6 +626,9 @@ void register_routes(httplib::Server& svr, Ctx& ctx) {
   });
   svr.Post("/api/comments", [&ctx](const httplib::Request& req, httplib::Response& res) {
     handle_comment_create(req, res, ctx);
+  });
+  svr.Delete(R"(/api/comments/(\d+))", [&ctx](const httplib::Request& req, httplib::Response& res) {
+    handle_comment_delete(req, res, ctx);
   });
 
   svr.Get("/api/stat/overview", [&ctx](const httplib::Request& req, httplib::Response& res) {
