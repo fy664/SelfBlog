@@ -428,6 +428,42 @@ bool MySqlStore::list_comments(int64_t article_id, std::vector<Comment>& out) {
   return true;
 }
 
+bool MySqlStore::record_login(const std::string& username, const std::string& ip,
+                              const std::string& user_agent, bool success) {
+  auto lease = pool_.acquire();
+  if (!lease) return false;
+  // UA 截断到 255 字符（列宽上限），避免超长被拒
+  std::string ua = user_agent;
+  if (ua.size() > 255) ua.resize(255);
+  return exec_stmt(lease.get(),
+                   "INSERT INTO `login_log`(`username`,`ip`,`user_agent`,`success`)"
+                   " VALUES(?,?,?,?)",
+                   {username, ip, ua, success ? "1" : "0"});
+}
+
+bool MySqlStore::list_login_logs(int limit, std::vector<LoginLog>& out) {
+  auto lease = pool_.acquire();
+  if (!lease) return false;
+  std::vector<std::vector<std::string>> rows;
+  if (!query_rows(lease.get(),
+                  "SELECT `id`,`username`,`ip`,`user_agent`,`success`,`created_at`"
+                  " FROM `login_log` ORDER BY `id` DESC LIMIT ?",
+                  {std::to_string(limit)}, rows)) {
+    return false;
+  }
+  for (auto& r : rows) {
+    LoginLog l;
+    l.id = std::stoll(r[0]);
+    l.username = r[1];
+    l.ip = r[2];
+    l.user_agent = r[3];
+    l.success = r[4] == "1";
+    l.created_at = r[5];
+    out.push_back(l);
+  }
+  return true;
+}
+
 bool MySqlStore::get_stats(int64_t& article_count, int64_t& published_count,
                            int64_t& view_total, int64_t& comment_count) {
   auto lease = pool_.acquire();

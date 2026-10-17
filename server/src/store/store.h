@@ -52,6 +52,16 @@ struct Comment {
   std::string created_at;
 };
 
+// 登录日志（登录/注册审计：谁、何时、从哪登录，成功与否）
+struct LoginLog {
+  int64_t id = 0;
+  std::string username;   // 尝试登录的用户名
+  std::string ip;         // 客户端 IP
+  std::string user_agent; // 浏览器/设备标识（截断存储）
+  bool success = false;   // 登录是否成功
+  std::string created_at;
+};
+
 // ---- 仓储接口 ----
 
 class Repository {
@@ -80,6 +90,11 @@ class Repository {
   // 评论
   virtual bool add_comment(const Comment& c, std::string& err) = 0;
   virtual bool list_comments(int64_t article_id, std::vector<Comment>& out) = 0;
+
+  // 登录日志
+  virtual bool record_login(const std::string& username, const std::string& ip,
+                            const std::string& user_agent, bool success) = 0;
+  virtual bool list_login_logs(int limit, std::vector<LoginLog>& out) = 0;
 
   // 统计
   virtual bool get_stats(int64_t& article_count, int64_t& published_count,

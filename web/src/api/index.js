@@ -37,3 +37,7 @@ export const createComment = (articleId, content) =>
 
 // ---- 统计（数据看板）----
 export const fetchStat = () => http.get('/stat/overview')
+
+// ---- 登录日志（后台，仅管理员）----
+export const fetchLoginLogs = (limit = 50) =>
+  http.get('/admin/login-logs', { params: { limit } })

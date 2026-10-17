@@ -109,6 +109,18 @@ bool validate_credential(const std::string& username, const std::string& passwor
   return true;
 }
 
+// 从请求中提取客户端 IP（优先 X-Forwarded-For，nginx 反代场景；其次直连地址）
+std::string client_ip(const httplib::Request& req) {
+  std::string xff = req.get_header_value("X-Forwarded-For");
+  if (!xff.empty()) {
+    // 取最左（真实客户端）地址
+    size_t comma = xff.find(',');
+    if (comma != std::string::npos) xff = xff.substr(0, comma);
+    return trim(xff);
+  }
+  return req.remote_addr;
+}
+
 // ---------- 文章参数校验 ----------
 
 bool valid_status(const std::string& s) {
@@ -136,6 +148,9 @@ void handle_register(const httplib::Request& req, httplib::Response& res, Ctx& c
     fail(res, 1002, err, 409);
     return;
   }
+  // 注册成功也记一条登录日志（审计：新账号从哪注册）
+  ctx.repo->record_login(username, client_ip(req),
+                         req.get_header_value("User-Agent"), true);
   User u;
   ctx.repo->get_user_by_name(username, u);
   ok(res, {{"id", u.id}, {"username", u.username}}, 201);
@@ -149,13 +164,48 @@ void handle_login(const httplib::Request& req, httplib::Response& res, Ctx& ctx)
   User u;
   if (!ctx.repo->get_user_by_name(username, u) ||
       !util::password_verify(password, u.password)) {
+    // 登录失败也记录（审计重点：失败尝试 + 来源 IP）
+    if (!username.empty()) {
+      ctx.repo->record_login(username, client_ip(req),
+                             req.get_header_value("User-Agent"), false);
+    }
     fail(res, 1003, "用户名或密码错误", 401);
     return;
   }
+  // 登录成功记录
+  ctx.repo->record_login(username, client_ip(req),
+                         req.get_header_value("User-Agent"), true);
   json payload = {{"uid", u.id}, {"username", u.username}, {"role", u.role}};
   std::string token = util::jwt_sign(payload, ctx.jwt_secret, ctx.jwt_expire_hours * 3600);
   ok(res, {{"token", token},
            {"user", {{"id", u.id}, {"username", u.username}, {"role", u.role}}}});
+}
+
+// 后台：登录日志列表（仅管理员）
+void handle_login_logs(const httplib::Request& req, httplib::Response& res, Ctx& ctx) {
+  User u;
+  if (!require_user(req, res, ctx, u)) return;
+  if (u.role != "admin") {
+    fail(res, 403, "仅管理员可查看登录日志", 403);
+    return;
+  }
+  int limit = std::atoi(req.get_param_value("limit").c_str());
+  if (limit <= 0 || limit > 200) limit = 50;
+  std::vector<LoginLog> logs;
+  if (!ctx.repo->list_login_logs(limit, logs)) {
+    fail(res, 500, "查询失败", 500);
+    return;
+  }
+  json arr = json::array();
+  for (auto& l : logs) {
+    arr.push_back({{"id", l.id},
+                   {"username", l.username},
+                   {"ip", l.ip},
+                   {"user_agent", l.user_agent},
+                   {"success", l.success},
+                   {"created_at", l.created_at}});
+  }
+  ok(res, {{"items", arr}});
 }
 
 void handle_article_list(const httplib::Request& req, httplib::Response& res, Ctx& ctx) {
@@ -484,6 +534,10 @@ void register_routes(httplib::Server& svr, Ctx& ctx) {
 
   svr.Get("/api/stat/overview", [&ctx](const httplib::Request& req, httplib::Response& res) {
     handle_stat_overview(req, res, ctx);
+  });
+
+  svr.Get("/api/admin/login-logs", [&ctx](const httplib::Request& req, httplib::Response& res) {
+    handle_login_logs(req, res, ctx);
   });
 }
 

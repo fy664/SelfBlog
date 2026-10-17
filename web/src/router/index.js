@@ -28,6 +28,7 @@ const routes = [
       { path: 'edit', name: 'admin-edit-new', component: () => import('../views/admin/AdminEdit.vue') },
       { path: 'edit/:id', name: 'admin-edit', component: () => import('../views/admin/AdminEdit.vue') },
       { path: 'comments', name: 'admin-comments', component: () => import('../views/admin/AdminComments.vue') },
+      { path: 'logs', name: 'admin-logs', component: () => import('../views/admin/AdminLogs.vue') },
       { path: 'stat', name: 'admin-stat', component: () => import('../views/admin/AdminStat.vue') }
     ]
   },

@@ -45,6 +45,10 @@ class MySqlStore : public Repository {
   bool add_comment(const Comment& c, std::string& err) override;
   bool list_comments(int64_t article_id, std::vector<Comment>& out) override;
 
+  bool record_login(const std::string& username, const std::string& ip,
+                    const std::string& user_agent, bool success) override;
+  bool list_login_logs(int limit, std::vector<LoginLog>& out) override;
+
   bool get_stats(int64_t& article_count, int64_t& published_count,
                  int64_t& view_total, int64_t& comment_count) override;
 

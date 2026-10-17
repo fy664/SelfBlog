@@ -14,6 +14,7 @@ const menus = [
   { path: '/admin/articles', label: '文章管理', icon: '📄' },
   { path: '/admin/edit', label: '新建文章', icon: '✏️' },
   { path: '/admin/comments', label: '评论管理', icon: '💬' },
+  { path: '/admin/logs', label: '登录记录', icon: '🛡️' },
   { path: '/admin/stat', label: '数据看板', icon: '📊' }
 ]
 

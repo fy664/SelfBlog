@@ -16,6 +16,7 @@ const char* kUsers = "users.json";
 const char* kArticles = "articles.json";
 const char* kTags = "tags.json";
 const char* kComments = "comments.json";
+const char* kLoginLogs = "login_logs.json";
 }  // namespace
 
 JsonStore::JsonStore(const std::string& data_dir) : dir_(data_dir) {
@@ -321,6 +322,42 @@ bool JsonStore::list_comments(int64_t article_id, std::vector<Comment>& out) {
   std::sort(out.begin(), out.end(), [](const Comment& a, const Comment& b) {
     return a.created_at < b.created_at;
   });
+  return true;
+}
+
+// ---------- 登录日志 ----------
+
+bool JsonStore::record_login(const std::string& username, const std::string& ip,
+                             const std::string& user_agent, bool success) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  auto logs = load(kLoginLogs);
+  int64_t id = 1;
+  for (auto& lg : logs) id = std::max(id, lg["id"].get<int64_t>() + 1);
+  logs.push_back({{"id", id},
+                  {"username", username},
+                  {"ip", ip},
+                  {"user_agent", user_agent},
+                  {"success", success},
+                  {"created_at", util::now_iso()}});
+  save(kLoginLogs, logs);
+  return true;
+}
+
+bool JsonStore::list_login_logs(int limit, std::vector<LoginLog>& out) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  auto logs = load(kLoginLogs);
+  // 按 id 倒序取最近 limit 条
+  for (int64_t i = static_cast<int64_t>(logs.size()) - 1;
+       i >= 0 && out.size() < static_cast<size_t>(limit); --i) {
+    LoginLog l;
+    l.id = logs[i]["id"].get<int64_t>();
+    l.username = logs[i].value("username", "");
+    l.ip = logs[i].value("ip", "");
+    l.user_agent = logs[i].value("user_agent", "");
+    l.success = logs[i].value("success", false);
+    l.created_at = logs[i].value("created_at", "");
+    out.push_back(l);
+  }
   return true;
 }
 

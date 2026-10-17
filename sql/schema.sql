@@ -88,6 +88,21 @@ CREATE TABLE IF NOT EXISTS `comment` (
 ) ENGINE=InnoDB COMMENT='评论表';
 
 -- -------------------------------------------------------------
+-- 6. 登录日志表 login_log（登录/注册审计）
+-- -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `login_log` (
+  `id`         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+  `username`   VARCHAR(32)     NOT NULL COMMENT '尝试登录的用户名',
+  `ip`         VARCHAR(64)     NOT NULL DEFAULT '' COMMENT '客户端 IP',
+  `user_agent` VARCHAR(255)    NOT NULL DEFAULT '' COMMENT '浏览器/设备标识',
+  `success`    TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否登录成功：1成功 0失败',
+  `created_at` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_username` (`username`),
+  KEY `idx_success` (`success`)
+) ENGINE=InnoDB COMMENT='登录日志表';
+
+-- -------------------------------------------------------------
 -- 预留表（后续版本）：setting（站点配置）、visit_log（访问日志）
 -- -------------------------------------------------------------
 
