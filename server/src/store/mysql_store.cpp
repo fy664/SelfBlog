@@ -486,6 +486,31 @@ bool MySqlStore::list_comments(int64_t article_id, std::vector<Comment>& out) {
   return true;
 }
 
+bool MySqlStore::list_comments_by_user(int64_t user_id, std::vector<Comment>& out) {
+  auto lease = pool_.acquire();
+  if (!lease) return false;
+  std::vector<std::vector<std::string>> rows;
+  if (!query_rows(lease.get(),
+                  "SELECT c.`id`,c.`article_id`,c.`user_id`,u.`username`,"
+                  "c.`content`,c.`created_at` FROM `comment` c "
+                  "JOIN `user` u ON u.`id`=c.`user_id` "
+                  "WHERE c.`user_id`=? ORDER BY c.`created_at` DESC",
+                  {std::to_string(user_id)}, rows)) {
+    return false;
+  }
+  for (auto& r : rows) {
+    Comment c;
+    c.id = std::stoll(r[0]);
+    c.article_id = std::stoll(r[1]);
+    c.user_id = std::stoll(r[2]);
+    c.username = r[3];
+    c.content = r[4];
+    c.created_at = r[5];
+    out.push_back(c);
+  }
+  return true;
+}
+
 bool MySqlStore::get_comment_by_id(int64_t id, Comment& out) {
   auto lease = pool_.acquire();
   if (!lease) return false;

@@ -100,6 +100,8 @@ class Repository {
   // 评论
   virtual bool add_comment(const Comment& c, std::string& err) = 0;
   virtual bool list_comments(int64_t article_id, std::vector<Comment>& out) = 0;
+  // 某用户发表的全部评论（后台"我的评论"用，跨文章）
+  virtual bool list_comments_by_user(int64_t user_id, std::vector<Comment>& out) = 0;
   virtual bool get_comment_by_id(int64_t id, Comment& out) = 0;
   virtual bool delete_comment(int64_t id, std::string& err) = 0;
 

@@ -1,45 +1,74 @@
 <script setup>
 // =============================================================
 // 评论管理：按角色展示评论，可删除
-//   admin：看全部已发布文章下的评论
-//   普通用户：只看自己文章下的评论（后端 status=all 按作者过滤）
+//   admin：遍历最近 5 篇已发布文章，汇总其下评论（全站视角）
+//   普通用户：只展示"自己发表的评论"（跨文章，user_id 过滤，含文章标题）
 // 删除按钮仅对「自己的评论」或 admin 显示（后端同样校验）
 // =============================================================
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { fetchArticles, fetchComments, deleteComment } from '../../api'
+import { fetchArticles, fetchComments, fetchCommentsByUser, deleteComment } from '../../api'
 import { useUserStore } from '../../store/user'
 
 const router = useRouter()
 const store = useUserStore()
-const list = ref([])        // [{id, article_id, article_title, username, content, created_at}]
+const list = ref([])        // [{id, article_id, article_title, username, content, created_at, user_id}]
 const loading = ref(true)
 
 async function load() {
   loading.value = true
   try {
-    // admin 看全部已发布文章；普通用户用 status=all（后端按 owner 过滤为本人文章）
-    const status = store.isAdmin ? 'published' : 'all'
-    const data = await fetchArticles({ page: 1, size: 5, status, sort: 'time' })
-    const rows = []
-    for (const a of data.items) {
-      const comments = await fetchComments(a.id)
-      for (const c of comments) {
-        rows.push({
-          id: c.id,
-          article_id: a.id,
-          article_title: a.title,
-          username: c.username,
-          content: c.content,
-          created_at: c.created_at,
-          user_id: c.user_id
-        })
+    if (store.isAdmin) {
+      // admin：看全站（最近 5 篇已发布文章下的评论）
+      const data = await fetchArticles({ page: 1, size: 5, status: 'published', sort: 'time' })
+      const rows = []
+      for (const a of data.items) {
+        const comments = await fetchComments(a.id)
+        for (const c of comments) {
+          rows.push({
+            id: c.id,
+            article_id: a.id,
+            article_title: a.title,
+            username: c.username,
+            content: c.content,
+            created_at: c.created_at,
+            user_id: c.user_id
+          })
+        }
       }
+      rows.sort((x, y) => (x.created_at < y.created_at ? 1 : -1))
+      list.value = rows
+    } else {
+      // 普通用户：自己发表的评论 ∪ 自己文章下的评论（去重合并，均带文章标题）
+      const seen = new Set()
+      const rows = []
+      const push = (c, title) => {
+        if (!seen.has(c.id)) {
+          seen.add(c.id)
+          rows.push({
+            id: c.id,
+            article_id: c.article_id,
+            article_title: title || `文章 #${c.article_id}`,
+            username: c.username,
+            content: c.content,
+            created_at: c.created_at,
+            user_id: c.user_id
+          })
+        }
+      }
+      // ① 自己发表的全部评论（跨文章，接口按 user_id 过滤并带标题）
+      const mine = await fetchCommentsByUser(store.user.id)
+      for (const c of mine) push(c, c.article_title)
+      // ② 自己文章下的全部评论（status=all 后端按作者过滤返回本人文章，含草稿）
+      const data = await fetchArticles({ page: 1, size: 50, status: 'all', sort: 'time' })
+      for (const a of data.items) {
+        const comments = await fetchComments(a.id)
+        for (const c of comments) push(c, a.title)
+      }
+      rows.sort((x, y) => (x.created_at < y.created_at ? 1 : -1))
+      list.value = rows
     }
-    // 按时间倒序
-    rows.sort((x, y) => (x.created_at < y.created_at ? 1 : -1))
-    list.value = rows
   } catch (e) {
     // 已由拦截器提示
   } finally {
@@ -75,7 +104,7 @@ function goArticle(id) {
   <div class="panel card" v-loading="loading">
     <div class="panel-head">
       <h2 class="panel-title">评论管理</h2>
-      <span class="hint">展示最近 5 篇文章下的评论</span>
+      <span class="hint">{{ store.isAdmin ? '展示最近 5 篇文章下的评论' : '展示你发表的评论和你文章下的评论' }}</span>
     </div>
 
     <div v-if="list.length === 0" class="empty">

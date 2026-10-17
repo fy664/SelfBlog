@@ -48,6 +48,7 @@ class MySqlStore : public Repository {
 
   bool add_comment(const Comment& c, std::string& err) override;
   bool list_comments(int64_t article_id, std::vector<Comment>& out) override;
+  bool list_comments_by_user(int64_t user_id, std::vector<Comment>& out) override;
   bool get_comment_by_id(int64_t id, Comment& out) override;
   bool delete_comment(int64_t id, std::string& err) override;
 

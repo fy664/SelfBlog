@@ -31,6 +31,9 @@ export const fetchTags = () => http.get('/tags')
 // ---- 评论 ----
 export const fetchComments = (articleId) =>
   http.get('/comments', { params: { article_id: articleId } })
+// 某用户发表的全部评论（后台"我的评论"用，含文章标题）
+export const fetchCommentsByUser = (userId) =>
+  http.get('/comments', { params: { user_id: userId } })
 
 export const createComment = (articleId, content) =>
   http.post('/comments', { article_id: articleId, content })

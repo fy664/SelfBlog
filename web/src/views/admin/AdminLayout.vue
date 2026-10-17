@@ -102,8 +102,8 @@ function goHome() { router.push('/') }
 
 @media (max-width: 640px) {
   .admin { flex-direction: column; }
-  .side { width: 100%; position: static; display: flex; flex-wrap: wrap; gap: 6px; }
-  .side-head { width: 100%; }
-  .menu-item { flex: 1; justify-content: center; min-width: 90px; }
+  .side { width: 100%; position: static; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .side-head { grid-column: 1 / -1; }
+  .menu-item { justify-content: center; }
 }
 </style>

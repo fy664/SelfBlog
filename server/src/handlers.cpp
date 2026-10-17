@@ -462,6 +462,32 @@ void handle_tag_list(const httplib::Request& req, httplib::Response& res, Ctx& c
 }
 
 void handle_comment_list(const httplib::Request& req, httplib::Response& res, Ctx& ctx) {
+  // 两种模式：
+  //   GET /api/comments?user_id=N   -> 该用户发表的全部评论（后台"我的评论"，带文章标题）
+  //   GET /api/comments?article_id=N -> 某篇文章下的评论（公开文章页）
+  int64_t user_id = std::atoi(req.get_param_value("user_id").c_str());
+  if (user_id > 0) {
+    std::vector<Comment> comments;
+    if (!ctx.repo->list_comments_by_user(user_id, comments)) {
+      fail(res, 500, "查询失败", 500);
+      return;
+    }
+    json arr = json::array();
+    for (auto& c : comments) {
+      std::string title;
+      Article a;
+      if (ctx.repo->get_article_by_id(c.article_id, a, false)) title = a.title;
+      arr.push_back({{"id", c.id},
+                     {"article_id", c.article_id},
+                     {"user_id", c.user_id},
+                     {"username", c.username},
+                     {"content", c.content},
+                     {"created_at", c.created_at},
+                     {"article_title", title}});
+    }
+    ok(res, arr);
+    return;
+  }
   int64_t article_id = std::atoi(req.get_param_value("article_id").c_str());
   if (article_id <= 0) {
     fail(res, 1201, "缺少 article_id", 400);

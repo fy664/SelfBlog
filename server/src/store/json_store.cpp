@@ -363,6 +363,27 @@ bool JsonStore::list_comments(int64_t article_id, std::vector<Comment>& out) {
   return true;
 }
 
+bool JsonStore::list_comments_by_user(int64_t user_id, std::vector<Comment>& out) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  auto comments = load(kComments);
+  for (auto& cm : comments) {
+    if (cm["user_id"].get<int64_t>() != user_id) continue;
+    Comment c;
+    c.id = cm["id"].get<int64_t>();
+    c.article_id = cm["article_id"].get<int64_t>();
+    c.user_id = user_id;
+    c.username = cm.value("username", "");
+    c.content = cm["content"].get<std::string>();
+    c.created_at = cm["created_at"].get<std::string>();
+    out.push_back(c);
+  }
+  // 按时间倒序（最新在前）
+  std::sort(out.begin(), out.end(), [](const Comment& a, const Comment& b) {
+    return a.created_at > b.created_at;
+  });
+  return true;
+}
+
 bool JsonStore::get_comment_by_id(int64_t id, Comment& out) {
   std::lock_guard<std::mutex> lock(mtx_);
   auto comments = load(kComments);
