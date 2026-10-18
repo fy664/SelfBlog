@@ -35,3 +35,6 @@ server/config.json
 server/setup_mysql.py
 server/smoke_test.py
 seed_demo.py
+
+# ---- 本地 .git 备份（历史重写前的临时备份）----
+.git_backup*/
