@@ -34,7 +34,7 @@
 
 namespace {
 
-// 生成一份默认 config.json（便于首次启动）
+// 生成一份默认 config.json（便于首次启动；密码/密钥留空占位，真实值自行填写）
 void ensure_default_config(const std::string& path) {
   std::ifstream in(path);
   if (in) return;
@@ -44,24 +44,24 @@ void ensure_default_config(const std::string& path) {
   "port": 8080,
   "store": "json",
   "data_dir": "./data",
-  "jwt_secret": "***REDACTED_SECRET***",
+  "jwt_secret": "change-me-before-production",
   "jwt_expire_hours": 72,
   "mysql": {
     "host": "127.0.0.1",
     "port": 3306,
     "user": "blog",
-    "password": "***REDACTED***",
+    "password": "",
     "database": "blog",
     "pool_size": 8
   },
   "admin": {
     "enabled": true,
     "username": "admin",
-    "password": "***REDACTED***"
+    "password": ""
   }
 }
 )";
-  std::printf("[启动] 已生成默认配置: %s\n", path.c_str());
+  std::printf("[启动] 已生成默认配置: %s\n（请在 config.json 中填写数据库与管理员密码）\n", path.c_str());
 }
 
 // 定位配置文件：优先当前目录，其次父目录（兼容从 build/Release 启动）

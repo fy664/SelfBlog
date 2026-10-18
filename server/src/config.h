@@ -18,25 +18,25 @@ struct Config {
   std::string store = "json";
   std::string data_dir = "./data";  // JsonStore 数据目录
 
-  // JWT
-  std::string jwt_secret = "***REDACTED_SECRET***";
+  // JWT（真实密钥由 config.json 提供；仓库不含生产密钥）
+  std::string jwt_secret = "dev-only-change-me-secret";
   long jwt_expire_hours = 72;
 
-  // MySQL（store=mysql 时生效）
+  // MySQL（store=mysql 时生效；真实密码由 config.json 提供）
   struct MySqlCfg {
     std::string host = "127.0.0.1";
     int port = 3306;
     std::string user = "blog";
-    std::string password = "***REDACTED***";
+    std::string password = "";  // 未配置时 MySQL 模式启动自检会失败并提示
     std::string database = "blog";
     int pool_size = 8;
   } mysql;
 
-  // 启动时引导创建的管理员账号（仅当不存在同名用户时）
+  // 启动时引导创建的管理员账号（仅当不存在同名用户时；密码由 config.json 提供）
   struct AdminCfg {
     bool enabled = false;
     std::string username = "admin";
-    std::string password = "***REDACTED***";
+    std::string password = "";
   } admin;
 
   // 从 JSON 对象填充（缺失字段保留默认值）

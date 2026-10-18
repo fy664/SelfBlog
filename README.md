@@ -82,13 +82,14 @@ build\Release\blog_server.exe
 
 默认 `store=mysql`（连接 127.0.0.1:3307 的本地 MySQL 8，见下节）；想零依赖跑通
 就把 config 里 `store` 改为 `"json"`（数据落在 `server/data/`）。启动时若开启
-`admin.enabled`，首次运行自动创建管理员账号（admin/***REDACTED***，上线前务必改）。
+`admin.enabled`，首次运行自动创建管理员账号（账号 admin，密码来自本地
+`server/config.json`，仓库不包含真实密码）。
 
 ## 五、接入 MySQL 8（本机已完成）
 
 本机现状（2026-10 已落地并验证）：MySQL **8.0.46** 安装在 `D:\MySQL8`，
 数据目录 `D:\MySQL8\data`，运行端口 **3307**（避开旧版 MySQL 5.0 服务的 3306，两者互不影响）。
-账号 `blog / ***REDACTED***`，库 `blog`，5 张表已建好，后端 MySQL 模式冒烟测试 18/18 通过。
+账号与密码见本地 `server/config.json`（仓库已忽略该文件，避免泄露真实凭据），库 `blog`，5 张表已建好。
 
 **重启电脑后如何再次启动 MySQL 8**（手动前台启动，开一个终端挂着即可）：
 
@@ -105,17 +106,12 @@ D:\MySQL8\bin\mysqld --initialize-insecure --basedir=D:\MySQL8 --datadir=D:\MySQ
 :: 2. 启动（或注册为 Windows 服务）
 D:\MySQL8\bin\mysqld --basedir=D:\MySQL8 --datadir=D:\MySQL8\data --port=3307 --console
 
-:: 3. 导入建表脚本 + 创建账号（仓库内置 setup_mysql.py 一键完成）
+:: 3. 导入建表脚本 + 创建账号（本机工具 setup_mysql.py 一键完成，不入仓库）
 python server\setup_mysql.py
 ```
 
-`server/config.json` 当前配置（MySQL 模式）：
-
-```json
-{ "store": "mysql",
-  "mysql": { "host": "127.0.0.1", "port": 3307, "user": "blog",
-             "password": "***REDACTED***", "database": "blog", "pool_size": 8 } }
-```
+`server/config.json` 为 MySQL 模式配置（`store=mysql`、端口 3307 等；真实密码仅存本地，
+**该文件已被 .gitignore 忽略，不会进入仓库**）。
 
 重新构建（CMake 已探测到 `D:\MySQL8\include` 与 `lib\libmysql.lib`，启用 MySqlStore，
 并把 `libmysql.dll` / `libssl-3-x64.dll` / `libcrypto-3-x64.dll` 拷贝到产物目录）：
@@ -142,7 +138,7 @@ npm run dev        :: http://127.0.0.1:5173 （/api 自动代理到后端 8080�
 
 访问 `http://127.0.0.1:5173`：
 - 首页文章流 / 文章详情（Markdown 渲染）/ 标签页 均为公开访问
-- `/login` 登录（管理员：admin / ***REDACTED***，见 server/config.json）
+- `/login` 登录（管理员账号 admin，密码见本地 `server/config.json`）
 - `/admin` 后台管理：文章 CRUD（含草稿）、评论查看、数据看板
 
 **六套 UI（多主题）**：导航栏「主题」下拉一键切换，选择自动持久化 ——
@@ -158,7 +154,7 @@ npm run dev        :: http://127.0.0.1:5173 （/api 自动代理到后端 8080�
 主题系统见 `web/src/store/theme.js` + `web/src/styles/themes.css`（CSS 变量换肤，
 Element Plus 主色联动）。响应式已覆盖移动/平板/桌面断点。
 
-演示数据（可选）：
+演示数据（可选，本机工具不入仓库）：
 
 ```bat
 python seed_demo.py     :: 用 admin 登录后端并发布一篇示例文章

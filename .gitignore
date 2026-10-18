@@ -23,3 +23,15 @@ _shots/
 *.log
 Thumbs.db
 .DS_Store
+
+# ---- 部署产物与打包（含服务器信息，不入库）----
+deploy/
+deploy_package/
+deploy_package.zip
+*.zip
+
+# ---- 本地配置与工具（含真实密码/密钥，不入库）----
+server/config.json
+server/setup_mysql.py
+server/smoke_test.py
+seed_demo.py

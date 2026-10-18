@@ -3,6 +3,7 @@
 SelfBlog 增量部署脚本（本机 Windows 运行）
 ==========================================
 用法：
+  set BLOG_SERVER=root@your-server-ip     # 先设置服务器地址（不含 IP，避免泄露）
   python deploy_push.py            # 全量：前端 + 后端 + 数据库迁移
   python deploy_push.py --fe       # 只推前端（秒级生效，无需重启）
   python deploy_push.py --be       # 只推后端源码并在服务器编译重启
@@ -19,8 +20,12 @@ import os
 import subprocess
 import sys
 
-SERVER = "root@SERVER_IP_REDACTED"
-ROOT = r"D:\Desktop\Code\个人博客"
+# 服务器地址从环境变量读取（git 仓库不含真实 IP）
+SERVER = os.environ.get("BLOG_SERVER") or "root@your-server-ip"
+if "your-server-ip" in SERVER:
+    print("!! 请先设置服务器地址：set BLOG_SERVER=root@<服务器IP>")
+    sys.exit(1)
+ROOT = os.path.dirname(os.path.abspath(__file__))
 SHOTS = os.path.join(ROOT, "_shots")
 os.makedirs(SHOTS, exist_ok=True)
 
@@ -84,12 +89,13 @@ def push_db():
 
 
 def verify():
+    base = "http://" + SERVER.split("@")[-1] + ":8081"
     run(["curl.exe", "-s", "-o", "NUL", "-w",
          "front: HTTP %{http_code}\nhealth: ",
-         "--max-time", "10", "http://SERVER_IP_REDACTED:8081/"], "验证公网前端")
+         "--max-time", "10", base + "/"], "验证公网前端")
     run(["curl.exe", "-s", "-o", "NUL", "-w",
          "HTTP %{http_code}\n", "--max-time", "10",
-         "http://SERVER_IP_REDACTED:8081/api/health"], "验证公网 API")
+         base + "/api/health"], "验证公网 API")
 
 
 if __name__ == "__main__":
@@ -103,4 +109,4 @@ if __name__ == "__main__":
     if "--db" in args:
         push_db()
     verify()
-    print("\n完成。访问 http://SERVER_IP_REDACTED:8081")
+    print("\n完成。访问 http://%s:8081" % SERVER.split("@")[-1])
