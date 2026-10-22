@@ -194,7 +194,7 @@ npm run dist       :: 打包 Windows 安装程序（NSIS，输出 desktop/releas
 | POST | /api/comments | 发布评论 | 是 |
 | GET | /api/stat/overview | 数据看板（文章/浏览/评论数） | 是 |
 
-## 八、技术要点（面试可讲）
+## 八、技术要点
 
 1. **MySQL 连接池**：固定大小 + 互斥锁/条件变量 + 探活重建 + RAII 租约，避免每请求建连。
 2. **SQL 注入防护**：全部写操作走 `mysql_stmt_*` 预编译绑定，不拼接 SQL。
@@ -202,7 +202,7 @@ npm run dist       :: 打包 Windows 安装程序（NSIS，输出 desktop/releas
 4. **Repository 模式**：上层业务与存储解耦，JsonStore/MySqlStore 一键切换，利于本地开发与生产一致。
 5. **SHA-256 自实现**：含 FIPS 官方测试向量自检，启动时验证实现正确性。
 
-## 九、开发路线（对照项目书 8 周计划）
+## 九、开发路线
 
 - [x] 第 1 周：项目书、DB 建模、API 设计
 - [x] 后端：HTTP 框架、仓储、JWT、文章/标签/评论核心接口（冒烟 18/18 通过）
@@ -211,7 +211,7 @@ npm run dist       :: 打包 Windows 安装程序（NSIS，输出 desktop/releas
 - [ ] 桌面端：Electron 壳、本地草稿、一键发布
 - [ ] 测试修复与上线：阿里云部署、README、简历描述
 
-## 十、安全说明（MVP 取舍）
+## 十、安全说明
 
 - 密码散列当前为 `盐$SHA256hex`（教学演示）；生产建议换 bcrypt/argon2。
 - JWT 密钥放 config.json；生产应改环境变量/密钥管理。
